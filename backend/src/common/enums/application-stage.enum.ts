@@ -1,4 +1,4 @@
-/**
+﻿/**
  * The candidate pipeline state machine.
  *
  * Applied -> Screened -> Shortlisted -> InterviewScheduled -> Offer -> Hired
