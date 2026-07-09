@@ -1,4 +1,4 @@
-﻿export enum OfferStatus {
+export enum OfferStatus {
   ISSUED = 'issued',
   ACCEPTED = 'accepted',
   REJECTED = 'rejected',
