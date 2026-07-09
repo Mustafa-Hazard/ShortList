@@ -1,4 +1,4 @@
-﻿# Build Log
+# Build Log
 
 A running log of each build phase, the decisions made, and why. Keeping this
 up to date as you go is what makes the individual viva painless — you can

@@ -1,4 +1,4 @@
-﻿# TalentBridge
+# TalentBridge
 
 AI-Augmented SME Recruitment Platform — Web Technologies course project.
 
