@@ -1,4 +1,4 @@
-import { DataSourceOptions } from 'typeorm';
+﻿import { DataSourceOptions } from 'typeorm';
 import { User } from '../users/user.entity';
 import { Company } from '../companies/company.entity';
 import { JobPosting } from '../jobs/job-posting.entity';

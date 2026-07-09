@@ -1,4 +1,4 @@
-export enum InterviewType {
+﻿export enum InterviewType {
   TECHNICAL = 'technical',
   BEHAVIOURAL = 'behavioural',
   FINAL = 'final',
