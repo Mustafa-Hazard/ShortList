@@ -34,65 +34,76 @@ export function AdminDashboard() {
 
   return (
     <div style={{ maxWidth: '1200px', margin: '0 auto', padding: '2rem 1.5rem' }}>
-      {/* Header Banner */}
-      <div className="glass-card animate-fade-in" style={{ padding: '2rem', marginBottom: '2rem' }}>
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+      {/* Blueprint Header Banner */}
+      <div className="blueprint-panel" style={{ padding: '1.75rem', marginBottom: '2rem' }}>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '1rem' }}>
           <div>
-            <h1 style={{ fontSize: '1.75rem', fontWeight: 800 }}>System Administration Dashboard</h1>
-            <p style={{ color: 'var(--text-secondary)', marginTop: '0.2rem' }}>
-              Platform analytics, AI Proxy monitoring, and cross-company recruitment metrics.
+            <span className="mono-tag tag-rust">[SYSTEM ADMIN TELEMETRY]</span>
+            <h1 style={{ fontSize: '1.6rem', fontWeight: 800, marginTop: '0.4rem' }}>
+              System Administration
+            </h1>
+            <p style={{ color: 'var(--fg-muted)', fontSize: '0.85rem', marginTop: '0.2rem' }}>
+              Cross-company recruitment pipeline metrics and Gemini AI Proxy gateway monitor.
             </p>
           </div>
-          <span className="badge badge-danger" style={{ fontSize: '0.85rem', padding: '0.4rem 0.8rem' }}>
-            <Shield size={14} /> System Administrator
+          <span className="mono-tag tag-rust" style={{ fontSize: '0.8rem', padding: '0.4rem 0.8rem' }}>
+            <Shield size={14} /> ADMINISTRATOR ACCESS
           </span>
         </div>
       </div>
 
       {/* Analytics Metric Grid */}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(250px, 1fr))', gap: '1.5rem', marginBottom: '2rem' }}>
-        <div className="glass-card" style={{ padding: '1.5rem' }}>
+        <div className="blueprint-panel" style={{ padding: '1.5rem' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-            <span style={{ fontSize: '0.85rem', color: 'var(--text-secondary)' }}>TOTAL JOB POSTINGS</span>
-            <Briefcase size={20} color="var(--primary)" />
+            <span className="mono-tag">TOTAL REQUISITIONS</span>
+            <Briefcase size={18} color="var(--accent-brass)" />
           </div>
-          <div style={{ fontSize: '2.25rem', fontWeight: 900, marginTop: '0.5rem' }}>{jobs.length}</div>
+          <div style={{ fontSize: '2.5rem', fontWeight: 900, fontFamily: 'var(--font-mono)', marginTop: '0.5rem', color: 'var(--fg-main)' }}>
+            {jobs.length}
+          </div>
         </div>
 
-        <div className="glass-card" style={{ padding: '1.5rem' }}>
+        <div className="blueprint-panel" style={{ padding: '1.5rem' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-            <span style={{ fontSize: '0.85rem', color: 'var(--text-secondary)' }}>TOTAL APPLICATIONS</span>
-            <Layers size={20} color="var(--ai-purple)" />
+            <span className="mono-tag">TOTAL MANIFESTS</span>
+            <Layers size={18} color="var(--accent-brass)" />
           </div>
-          <div style={{ fontSize: '2.25rem', fontWeight: 900, marginTop: '0.5rem' }}>{applications.length}</div>
+          <div style={{ fontSize: '2.5rem', fontWeight: 900, fontFamily: 'var(--font-mono)', marginTop: '0.5rem', color: 'var(--fg-main)' }}>
+            {applications.length}
+          </div>
         </div>
 
-        <div className="glass-card" style={{ padding: '1.5rem' }}>
+        <div className="blueprint-panel" style={{ padding: '1.5rem' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-            <span style={{ fontSize: '0.85rem', color: 'var(--text-secondary)' }}>SCORED BY AI</span>
-            <Cpu size={20} color="var(--ai-cyan)" />
+            <span className="mono-tag">SCORED BY AI</span>
+            <Cpu size={18} color="var(--accent-brass)" />
           </div>
-          <div style={{ fontSize: '2.25rem', fontWeight: 900, marginTop: '0.5rem' }}>{scoredCount}</div>
+          <div style={{ fontSize: '2.5rem', fontWeight: 900, fontFamily: 'var(--font-mono)', marginTop: '0.5rem', color: 'var(--fg-main)' }}>
+            {scoredCount}
+          </div>
         </div>
 
-        <div className="glass-card" style={{ padding: '1.5rem' }}>
+        <div className="blueprint-panel" style={{ padding: '1.5rem' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-            <span style={{ fontSize: '0.85rem', color: 'var(--text-secondary)' }}>CANDIDATES HIRED</span>
-            <CheckCircle2 size={20} color="var(--success)" />
+            <span className="mono-tag tag-green">TERMINUS HIRED</span>
+            <CheckCircle2 size={18} color="var(--signal-green)" />
           </div>
-          <div style={{ fontSize: '2.25rem', fontWeight: 900, marginTop: '0.5rem' }}>{hiredCount}</div>
+          <div style={{ fontSize: '2.5rem', fontWeight: 900, fontFamily: 'var(--font-mono)', marginTop: '0.5rem', color: '#79ab92' }}>
+            {hiredCount}
+          </div>
         </div>
       </div>
 
       {/* AI Gateway Health Monitor */}
-      <div className="glass-card-ai" style={{ padding: '1.5rem', borderRadius: '12px', marginBottom: '2rem' }}>
+      <div className="blueprint-panel" style={{ padding: '1.5rem', border: '1px solid var(--signal-green)' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem', marginBottom: '0.5rem' }}>
-          <Activity size={20} color="var(--success)" />
-          <h3 style={{ fontSize: '1.1rem', fontWeight: 700 }}>Gemini AI Gateway Status</h3>
-          <span className="badge badge-success" style={{ marginLeft: 'auto' }}>ONLINE (200 OK)</span>
+          <Activity size={18} color="var(--signal-green)" />
+          <h3 style={{ fontSize: '1.1rem', fontWeight: 700 }}>Gemini AI Gateway Telemetry</h3>
+          <span className="mono-tag tag-green" style={{ marginLeft: 'auto' }}>ONLINE // STATUS 200 OK</span>
         </div>
-        <p style={{ fontSize: '0.85rem', color: 'var(--text-secondary)' }}>
-          All 4 AI Features (JD Generator, CV Scorer, Question Suggester, Offer Letter Drafter) active. Token budget and response latency operating within normal parameters.
+        <p style={{ fontSize: '0.85rem', color: 'var(--fg-muted)' }}>
+          All 4 AI Features (JD Generator, CV Scorer, Question Suggester, Offer Letter Drafter) operating cleanly with structured JSON schema validation and graceful fallback degradation.
         </p>
       </div>
     </div>

@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { UserCheck, Sparkles, HelpCircle, CheckCheck, Brain, ArrowRight, FileCheck } from 'lucide-react';
 import { apiClient } from '../api/client';
+import { TransitLine } from '../components/TransitLine';
 
 export function HiringManagerDashboard() {
   const [applications, setApplications] = useState<any[]>([]);
@@ -82,7 +83,7 @@ export function HiringManagerDashboard() {
       await apiClient.patch(`/applications/${appId}/stage`, { targetStage });
       fetchApplications();
     } catch (err: any) {
-      alert(err.response?.data?.message || 'Stage transition failed');
+      alert(err.response?.data?.message || 'Stage transition failed: Role permissions restricted.');
     }
   };
 
@@ -92,54 +93,59 @@ export function HiringManagerDashboard() {
 
   return (
     <div style={{ maxWidth: '1200px', margin: '0 auto', padding: '2rem 1.5rem' }}>
-      {/* Header Banner */}
-      <div className="glass-card animate-fade-in" style={{ padding: '2rem', marginBottom: '2rem' }}>
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+      {/* Blueprint Control Banner */}
+      <div className="blueprint-panel" style={{ padding: '1.75rem', marginBottom: '2rem' }}>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '1rem' }}>
           <div>
-            <h1 style={{ fontSize: '1.75rem', fontWeight: 800 }}>Hiring Manager Workspace</h1>
-            <p style={{ color: 'var(--text-secondary)', marginTop: '0.2rem' }}>
-              Evaluate shortlisted candidates, generate AI interview questions, and approve offer letters.
+            <span className="mono-tag tag-brass">[HIRING MANAGER JUNCTION GATE]</span>
+            <h1 style={{ fontSize: '1.6rem', fontWeight: 800, marginTop: '0.4rem' }}>
+              Shortlist Approval Queue
+            </h1>
+            <p style={{ color: 'var(--fg-muted)', fontSize: '0.85rem', marginTop: '0.2rem' }}>
+              Review candidates at elevated role junctions (Shortlist Lock & Offer Letter Approvals).
             </p>
           </div>
-          <span className="badge badge-warning" style={{ fontSize: '0.85rem', padding: '0.4rem 0.8rem' }}>
-            <UserCheck size={14} /> Shortlist Review ({shortlistedApps.length})
+
+          <span className="mono-tag tag-brass" style={{ fontSize: '0.8rem', padding: '0.4rem 0.8rem' }}>
+            <UserCheck size={14} /> QUEUED JUNCTION MANIFESTS ({shortlistedApps.length})
           </span>
         </div>
       </div>
 
       {/* Applications List */}
-      <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
         {shortlistedApps.length === 0 ? (
-          <div className="glass-card" style={{ padding: '3rem', textAlign: 'center', color: 'var(--text-muted)' }}>
-            No shortlisted candidates pending your review right now.
+          <div className="blueprint-panel" style={{ padding: '3rem', textAlign: 'center', color: 'var(--fg-muted)', fontFamily: 'var(--font-mono)', fontSize: '0.85rem' }}>
+            No candidates pending Hiring Manager junction clearance at this time.
           </div>
         ) : (
           shortlistedApps.map((app) => (
-            <div key={app.id} className="glass-card" style={{ padding: '1.5rem' }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: '1rem' }}>
+            <div key={app.id} className="blueprint-panel" style={{ padding: '1.5rem' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: '1rem', marginBottom: '1rem' }}>
                 <div>
                   <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem' }}>
+                    <span className="mono-tag tag-brass">ID: [APP-{app.id.substring(0, 8).toUpperCase()}]</span>
                     <h3 style={{ fontSize: '1.15rem', fontWeight: 700 }}>
                       {app.candidate?.firstName} {app.candidate?.lastName}
                     </h3>
                     {app.aiScore !== null && (
-                      <span className="badge badge-ai" style={{ fontSize: '0.8rem' }}>
-                        <Brain size={12} /> AI Match: {app.aiScore}/100
+                      <span className="mono-tag tag-brass">
+                        <Brain size={12} /> MATCH SCORE: {app.aiScore}/100
                       </span>
                     )}
                   </div>
-                  <p style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', marginTop: '0.2rem' }}>
-                    Role: <strong>{app.jobPosting?.title}</strong> | Stage: <strong style={{ color: 'var(--primary)' }}>{app.stage.toUpperCase()}</strong>
+                  <p style={{ fontSize: '0.8rem', color: 'var(--fg-muted)', marginTop: '0.3rem', fontFamily: 'var(--font-mono)' }}>
+                    REQUISITION: <strong>{app.jobPosting?.title}</strong>
                   </p>
                 </div>
 
                 <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', flexWrap: 'wrap' }}>
                   <button
                     type="button"
-                    className="btn btn-ai btn-sm"
+                    className="btn btn-brass btn-sm"
                     onClick={() => openInterviewQuestionDrawer(app.id)}
                   >
-                    <HelpCircle size={14} /> AI Interview Questions
+                    <HelpCircle size={13} /> AI INTERVIEW QUESTIONS
                   </button>
 
                   <button
@@ -147,7 +153,7 @@ export function HiringManagerDashboard() {
                     className="btn btn-secondary btn-sm"
                     onClick={() => openOfferApprovalDrawer(app.id)}
                   >
-                    <FileCheck size={14} /> Review & Approve Offer
+                    <FileCheck size={13} /> REVIEW & APPROVE OFFER
                   </button>
 
                   {app.stage === 'shortlisted' && (
@@ -156,32 +162,34 @@ export function HiringManagerDashboard() {
                       className="btn btn-primary btn-sm"
                       onClick={() => handleTransitionStage(app.id, 'interview_scheduled')}
                     >
-                      Schedule Interview <ArrowRight size={12} />
+                      SCHEDULE INTERVIEW <ArrowRight size={12} />
                     </button>
                   )}
 
                   {app.stage === 'interview_scheduled' && (
                     <button
                       type="button"
-                      className="btn btn-warning btn-sm"
+                      className="btn btn-brass btn-sm"
                       onClick={() => handleTransitionStage(app.id, 'offer')}
                     >
-                      Move to Offer <ArrowRight size={12} />
+                      MOVE TO OFFER <ArrowRight size={12} />
                     </button>
                   )}
 
                   {app.stage === 'offer' && (
                     <button
                       type="button"
-                      className="btn btn-success btn-sm"
+                      className="btn btn-signal-green btn-sm"
                       onClick={() => handleTransitionStage(app.id, 'hired')}
-                      style={{ background: 'var(--success)', color: 'white' }}
                     >
-                      Hire Candidate <CheckCheck size={14} />
+                      HIRE CANDIDATE <CheckCheck size={13} />
                     </button>
                   )}
                 </div>
               </div>
+
+              {/* Condensed Transit Line */}
+              <TransitLine currentStage={app.stage} scale="condensed" />
             </div>
           ))
         )}
@@ -190,47 +198,45 @@ export function HiringManagerDashboard() {
       {/* Modal: AI Question Suggester Drawer */}
       {selectedInterviewModal && (
         <div className="modal-overlay">
-          <div className="glass-card modal-content animate-fade-in" style={{ padding: '2rem', maxWidth: '700px' }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
+          <div className="blueprint-panel modal-content" style={{ padding: '2rem', maxWidth: '700px' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
               <div>
-                <h2 style={{ fontSize: '1.35rem', fontWeight: 800, color: 'var(--ai-purple)' }}>
-                  AI Feature 3: Tailored Interview Questions
+                <span className="mono-tag tag-brass">[AI FEATURE 3: QUESTION SUGGESTER]</span>
+                <h2 style={{ fontSize: '1.35rem', fontWeight: 800, marginTop: '0.3rem' }}>
+                  Tailored Interview Probes
                 </h2>
-                <p style={{ fontSize: '0.85rem', color: 'var(--text-secondary)' }}>
-                  Generated based on job requirements and candidate profile gaps.
-                </p>
               </div>
               <button
                 type="button"
-                className="btn btn-ai btn-sm"
+                className="btn btn-brass btn-sm"
                 onClick={() => handleGenerateQuestions(selectedInterviewModal.id)}
                 disabled={questionsLoading}
               >
-                <Sparkles size={14} /> {questionsLoading ? 'Generating...' : 'Regenerate Questions'}
+                <Sparkles size={13} /> {questionsLoading ? 'GENERATING...' : 'REGENERATE QUESTIONS'}
               </button>
             </div>
 
             {questions.length === 0 ? (
-              <div style={{ textAlign: 'center', padding: '2rem 0', color: 'var(--text-muted)' }}>
-                No AI questions generated yet. Click "Regenerate Questions" above to invoke Gemini AI.
+              <div style={{ textAlign: 'center', padding: '2rem 0', color: 'var(--fg-muted)', fontFamily: 'var(--font-mono)', fontSize: '0.85rem' }}>
+                No AI questions generated yet. Click "REGENERATE QUESTIONS" above.
               </div>
             ) : (
               <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem', maxHeight: '450px', overflowY: 'auto' }}>
                 {questions.map((q: any, idx: number) => (
-                  <div key={idx} style={{ background: 'rgba(0, 0, 0, 0.3)', padding: '1rem', borderRadius: '8px', border: '1px solid var(--border-color)' }}>
-                    <p style={{ fontSize: '0.9rem', fontWeight: 700, color: '#f9fafb', marginBottom: '0.3rem' }}>
+                  <div key={idx} style={{ background: '#0B131C', padding: '1rem', border: '1px solid var(--line-grey)' }}>
+                    <p style={{ fontSize: '0.9rem', fontWeight: 700, color: 'var(--fg-main)', marginBottom: '0.3rem' }}>
                       Q{idx + 1}: {q.question}
                     </p>
 
                     {q.category && (
-                      <span className="badge badge-primary" style={{ fontSize: '0.68rem', marginBottom: '0.5rem' }}>
-                        Category: {q.category}
+                      <span className="mono-tag tag-brass" style={{ fontSize: '0.65rem', marginBottom: '0.5rem', display: 'inline-block' }}>
+                        CATEGORY: {q.category.toUpperCase()}
                       </span>
                     )}
 
                     {q.listenFor && (
-                      <p style={{ fontSize: '0.8rem', color: 'var(--success)', marginTop: '0.4rem' }}>
-                        <strong>What to listen for:</strong> {q.listenFor}
+                      <p style={{ fontSize: '0.8rem', color: '#79ab92', marginTop: '0.4rem', fontFamily: 'var(--font-mono)' }}>
+                        <strong>WHAT TO LISTEN FOR:</strong> {q.listenFor}
                       </p>
                     )}
                   </div>
@@ -244,7 +250,7 @@ export function HiringManagerDashboard() {
                 className="btn btn-secondary"
                 onClick={() => setSelectedInterviewModal(null)}
               >
-                Close
+                CLOSE
               </button>
             </div>
           </div>
@@ -254,26 +260,26 @@ export function HiringManagerDashboard() {
       {/* Modal: Offer Letter Approval */}
       {selectedOfferModal && (
         <div className="modal-overlay">
-          <div className="glass-card modal-content animate-fade-in" style={{ padding: '2rem', maxWidth: '650px' }}>
-            <h2 style={{ fontSize: '1.35rem', fontWeight: 800, marginBottom: '0.5rem' }}>
-              Review & Approve Offer Letter
-            </h2>
-            <p style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', marginBottom: '1rem' }}>
-              Role: <strong>{selectedOfferModal.roleTitle}</strong> | Salary: <strong>${selectedOfferModal.salary?.toLocaleString()}</strong>
-            </p>
+          <div className="blueprint-panel modal-content" style={{ padding: '2rem', maxWidth: '650px' }}>
+            <div style={{ marginBottom: '1.5rem' }}>
+              <span className="mono-tag tag-brass">[OFFER LETTER APPROVAL GATE]</span>
+              <h2 style={{ fontSize: '1.35rem', fontWeight: 800, marginTop: '0.3rem' }}>
+                {selectedOfferModal.roleTitle} — ${selectedOfferModal.salary?.toLocaleString()}
+              </h2>
+            </div>
 
-            <div className="glass-card-ai" style={{ padding: '1.25rem', borderRadius: '8px', marginBottom: '1.5rem' }}>
-              <h4 style={{ fontSize: '0.85rem', fontWeight: 700, color: 'var(--ai-purple)', marginBottom: '0.5rem' }}>
-                AI-DRAFTED LETTER BODY:
-              </h4>
-              <p style={{ fontSize: '0.85rem', color: 'var(--text-primary)', whiteSpace: 'pre-line', lineHeight: '1.6' }}>
+            <div style={{ background: '#111C27', padding: '1.25rem', border: '1px solid var(--accent-brass)', borderRadius: '2px', marginBottom: '1.5rem' }}>
+              <span className="mono-tag tag-brass" style={{ display: 'inline-block', marginBottom: '0.5rem' }}>
+                AI-DRAFTED LETTER BODY FOR REVIEW:
+              </span>
+              <p style={{ fontSize: '0.85rem', color: 'var(--fg-main)', whiteSpace: 'pre-line', lineHeight: '1.6' }}>
                 {selectedOfferModal.draftedLetter || 'No draft body generated.'}
               </p>
             </div>
 
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-              <span className={`badge ${selectedOfferModal.letterApproved ? 'badge-success' : 'badge-warning'}`}>
-                Approval Status: {selectedOfferModal.letterApproved ? 'APPROVED' : 'PENDING APPROVAL'}
+              <span className={`mono-tag ${selectedOfferModal.letterApproved ? 'tag-green' : 'tag-rust'}`}>
+                APPROVAL: {selectedOfferModal.letterApproved ? 'APPROVED' : 'PENDING HIRING MANAGER SIGN-OFF'}
               </span>
 
               <div style={{ display: 'flex', gap: '0.75rem' }}>
@@ -282,17 +288,16 @@ export function HiringManagerDashboard() {
                   className="btn btn-secondary"
                   onClick={() => setSelectedOfferModal(null)}
                 >
-                  Close
+                  CLOSE
                 </button>
                 {!selectedOfferModal.letterApproved && (
                   <button
                     type="button"
-                    className="btn btn-primary"
+                    className="btn btn-signal-green"
                     onClick={() => handleApproveOffer(selectedOfferModal.id)}
                     disabled={approving}
-                    style={{ background: 'var(--success)' }}
                   >
-                    <CheckCheck size={16} /> {approving ? 'Approving...' : 'Approve Offer Letter'}
+                    <CheckCheck size={15} /> {approving ? 'APPROVING...' : 'APPROVE OFFER LETTER'}
                   </button>
                 )}
               </div>
