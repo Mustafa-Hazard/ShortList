@@ -72,6 +72,7 @@
 7. **Frontend: role dashboards + AI-powered components** — ✅ COMPLETED (PR #10)
 8. **Admin analytics dashboard** — ✅ COMPLETED (PR #10 & #11)
 9. **Remaining deliverables** (ER diagram, full API contract doc, AI integration report, data privacy) — ✅ COMPLETED (`docs/ER_DIAGRAM.md`, `docs/API_CONTRACT.md`, `docs/AI_INTEGRATION_REPORT.md`, `docs/DATA_PRIVACY.md`)
+10. **GitHub Actions CI Workflow** — ✅ COMPLETED (`.github/workflows/ci.yml` for automated backend build, Jest test coverage, and Vite frontend build)
 
 **Grading-relevant, don't lose sight of:** ≥60% controller test coverage (comfortably clear on all 4 shipped modules), Jest+Supertest on every role-protected route, Swagger accuracy, at least one AI feature with real fallback/degradation behavior (CV module + now the AI Proxy module itself both satisfy this — reuse the same pattern for JD Generator and CV Scorer), zero API keys in frontend code.
 
