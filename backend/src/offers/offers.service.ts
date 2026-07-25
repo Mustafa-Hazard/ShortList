@@ -14,6 +14,8 @@ import { Role } from '../common/enums/role.enum';
 import { OfferStatus } from '../common/enums/offer-status.enum';
 import { JobsService } from '../jobs/jobs.service';
 import { OfferDrafterService } from './offer-drafter.service';
+import { NotificationsService } from '../notifications/notifications.service';
+import { NotificationType } from '../notifications/notification.entity';
 import { CreateOfferDto } from './dto/create-offer.dto';
 import { RespondOfferDto } from './dto/respond-offer.dto';
 import { UpdateOfferDto } from './dto/update-offer.dto';
@@ -27,6 +29,7 @@ export class OffersService {
     private applicationsRepo: Repository<Application>,
     private jobsService: JobsService,
     private offerDrafterService: OfferDrafterService,
+    private notificationsService: NotificationsService,
   ) {}
 
   async create(dto: CreateOfferDto, user: User): Promise<Offer> {
@@ -86,7 +89,24 @@ export class OffersService {
   async approveLetter(id: string, user: User): Promise<Offer> {
     const offer = await this.getOwnedForStaff(id, user);
     offer.letterApproved = true;
-    return this.offersRepo.save(offer);
+    const saved = await this.offersRepo.save(offer);
+
+    try {
+      await this.notificationsService.createAndSend(
+        offer.application.candidateId,
+        NotificationType.OFFER_ISSUED,
+        {
+          offerId: saved.id,
+          applicationId: saved.applicationId,
+          roleTitle: saved.roleTitle,
+          salary: saved.salary,
+        },
+      );
+    } catch (err) {
+      // Degrade-don't-block
+    }
+
+    return saved;
   }
 
   async generateLetter(id: string, user: User): Promise<Offer> {
@@ -146,7 +166,26 @@ export class OffersService {
       offer.candidateResponse = dto.candidateResponse;
     }
 
-    return this.offersRepo.save(offer);
+    const saved = await this.offersRepo.save(offer);
+
+    if (offer.issuedById) {
+      try {
+        await this.notificationsService.createAndSend(
+          offer.issuedById,
+          NotificationType.OFFER_RESPONDED,
+          {
+            offerId: saved.id,
+            applicationId: saved.applicationId,
+            status: saved.status,
+            candidateResponse: saved.candidateResponse,
+          },
+        );
+      } catch (err) {
+        // Degrade-don't-block
+      }
+    }
+
+    return saved;
   }
 
   async update(

@@ -11,6 +11,7 @@ import { Application } from '../applications/application.entity';
 import { JobsService } from '../jobs/jobs.service';
 import { ApplicationsService } from '../applications/applications.service';
 import { QuestionSuggesterService } from './question-suggester.service';
+import { NotificationsService } from '../notifications/notifications.service';
 import { InterviewStatus, InterviewType } from '../common/enums/interview.enum';
 import { JobStatus, JobType } from '../common/enums/job.enum';
 import { Role } from '../common/enums/role.enum';
@@ -102,6 +103,10 @@ describe('InterviewsService', () => {
         {
           provide: QuestionSuggesterService,
           useValue: { generateQuestions: jest.fn() },
+        },
+        {
+          provide: NotificationsService,
+          useValue: { createAndSend: jest.fn() },
         },
       ],
     }).compile();
