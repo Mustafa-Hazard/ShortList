@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { LogIn, UserCheck, ShieldCheck, Briefcase, Lock } from 'lucide-react';
 import { useAuthStore, Role } from '../store/useAuthStore';
+import { apiClient } from '../api/client';
 
 export function LoginPage() {
   const [email, setEmail] = useState('');
@@ -24,17 +25,32 @@ export function LoginPage() {
     }
   };
 
-  const handleDemoLogin = async (roleEmail: string) => {
+  const handleDemoLogin = async (roleEmail: string, roleType: Role) => {
     setEmail(roleEmail);
     setError('');
     try {
       await login(roleEmail, 'Password123!');
-      const user = useAuthStore.getState().user;
-      if (user) {
-        navigate(getRoleRoute(user.role));
+    } catch {
+      try {
+        const res = await apiClient.post('/auth/register', {
+          email: roleEmail,
+          password: 'Password123!',
+          firstName: 'Demo',
+          lastName: roleType.toUpperCase(),
+          role: roleType,
+          companyName: roleType !== Role.CANDIDATE ? 'Acme Corp' : undefined,
+        });
+        useAuthStore.setState({ user: res.data.user, token: res.data.accessToken });
+        localStorage.setItem('token', res.data.accessToken);
+        localStorage.setItem('user', JSON.stringify(res.data.user));
+      } catch (regErr: any) {
+        setError(regErr.response?.data?.message || 'Demo authentication failed');
+        return;
       }
-    } catch (err: any) {
-      setError(err.response?.data?.message || 'Demo authentication failed');
+    }
+    const user = useAuthStore.getState().user;
+    if (user) {
+      navigate(getRoleRoute(user.role));
     }
   };
 
@@ -159,7 +175,7 @@ export function LoginPage() {
               <button
                 type="button"
                 className="btn btn-secondary btn-sm"
-                onClick={() => handleDemoLogin('candidate@talentbridge.dev')}
+                onClick={() => handleDemoLogin('candidate@talentbridge.dev', Role.CANDIDATE)}
                 style={{ fontSize: '0.72rem', justifyContent: 'flex-start' }}
               >
                 <UserCheck size={13} color="var(--fg-main)" /> Candidate
@@ -167,7 +183,7 @@ export function LoginPage() {
               <button
                 type="button"
                 className="btn btn-secondary btn-sm"
-                onClick={() => handleDemoLogin('recruiter@acme.dev')}
+                onClick={() => handleDemoLogin('recruiter@acme.dev', Role.RECRUITER)}
                 style={{ fontSize: '0.72rem', justifyContent: 'flex-start' }}
               >
                 <Briefcase size={13} color="var(--accent-brass)" /> Recruiter
@@ -175,7 +191,7 @@ export function LoginPage() {
               <button
                 type="button"
                 className="btn btn-secondary btn-sm"
-                onClick={() => handleDemoLogin('hm@acme.dev')}
+                onClick={() => handleDemoLogin('hm@acme.dev', Role.HIRING_MANAGER)}
                 style={{ fontSize: '0.72rem', justifyContent: 'flex-start' }}
               >
                 <Lock size={13} color="#79ab92" /> Hiring Mgr
@@ -183,7 +199,7 @@ export function LoginPage() {
               <button
                 type="button"
                 className="btn btn-secondary btn-sm"
-                onClick={() => handleDemoLogin('admin@acme.dev')}
+                onClick={() => handleDemoLogin('admin@acme.dev', Role.ADMIN)}
                 style={{ fontSize: '0.72rem', justifyContent: 'flex-start' }}
               >
                 <ShieldCheck size={13} color="#d96950" /> Admin
