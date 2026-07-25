@@ -11,6 +11,7 @@ import { Offer } from './offer.entity';
 import { Application } from '../applications/application.entity';
 import { JobsService } from '../jobs/jobs.service';
 import { OfferDrafterService } from './offer-drafter.service';
+import { NotificationsService } from '../notifications/notifications.service';
 import { OfferStatus } from '../common/enums/offer-status.enum';
 import { JobStatus } from '../common/enums/job.enum';
 import { Role } from '../common/enums/role.enum';
@@ -88,6 +89,10 @@ describe('OffersService', () => {
         {
           provide: OfferDrafterService,
           useValue: { generateDraft: jest.fn() },
+        },
+        {
+          provide: NotificationsService,
+          useValue: { createAndSend: jest.fn() },
         },
       ],
     }).compile();

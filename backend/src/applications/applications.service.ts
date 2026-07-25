@@ -14,6 +14,8 @@ import { Role } from '../common/enums/role.enum';
 import { User } from '../users/user.entity';
 import { JobsService } from '../jobs/jobs.service';
 import { CvScorerService } from './cv-scorer.service';
+import { NotificationsService } from '../notifications/notifications.service';
+import { NotificationType } from '../notifications/notification.entity';
 import { CreateApplicationDto } from './dto/create-application.dto';
 import { ApplicationQueryDto } from './dto/application-query.dto';
 
@@ -78,6 +80,7 @@ export class ApplicationsService {
     private applicationsRepo: Repository<Application>,
     private jobsService: JobsService,
     private cvScorerService: CvScorerService,
+    private notificationsService: NotificationsService,
   ) {}
 
   async apply(dto: CreateApplicationDto, candidate: User): Promise<Application> {
@@ -164,7 +167,23 @@ export class ApplicationsService {
     const application = await this.getOwnedForStaff(id, user);
     this.assertTransitionAllowed(application.stage, target, user.role);
     application.stage = target;
-    return this.applicationsRepo.save(application);
+    const saved = await this.applicationsRepo.save(application);
+
+    try {
+      await this.notificationsService.createAndSend(
+        application.candidateId,
+        NotificationType.APPLICATION_STAGE_CHANGED,
+        {
+          applicationId: id,
+          jobPostingId: application.jobPostingId,
+          newStage: target,
+        },
+      );
+    } catch (err) {
+      // Degrade-don't-block
+    }
+
+    return saved;
   }
 
   async bulkTransition(

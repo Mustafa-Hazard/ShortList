@@ -11,6 +11,7 @@ import { ApplicationsService } from './applications.service';
 import { Application } from './application.entity';
 import { JobsService } from '../jobs/jobs.service';
 import { CvScorerService } from './cv-scorer.service';
+import { NotificationsService } from '../notifications/notifications.service';
 import { ApplicationStage } from '../common/enums/application-stage.enum';
 import { JobStatus, JobType } from '../common/enums/job.enum';
 import { Role } from '../common/enums/role.enum';
@@ -84,6 +85,10 @@ describe('ApplicationsService', () => {
         {
           provide: CvScorerService,
           useValue: { score: jest.fn() },
+        },
+        {
+          provide: NotificationsService,
+          useValue: { createAndSend: jest.fn() },
         },
       ],
     }).compile();
