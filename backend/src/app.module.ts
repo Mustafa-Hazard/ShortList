@@ -10,6 +10,7 @@ import { ApplicationsModule } from './applications/applications.module';
 import { CvModule } from './cv/cv.module';
 import { InterviewsModule } from './interviews/interviews.module';
 import { OffersModule } from './offers/offers.module';
+import { NotificationsModule } from './notifications/notifications.module';
 import { JwtAuthGuard } from './common/guards/jwt-auth.guard';
 import { RolesGuard } from './common/guards/roles.guard';
 
@@ -25,6 +26,7 @@ import { RolesGuard } from './common/guards/roles.guard';
     CvModule,
     InterviewsModule,
     OffersModule,
+    NotificationsModule,
   ],
   providers: [
     // Every route requires a valid JWT by default (opt out with @Public()),
