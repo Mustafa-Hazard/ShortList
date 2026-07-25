@@ -13,6 +13,7 @@ import { JobStatus } from '../common/enums/job.enum';
 import { Role } from '../common/enums/role.enum';
 import { User } from '../users/user.entity';
 import { JobsService } from '../jobs/jobs.service';
+import { CvScorerService } from './cv-scorer.service';
 import { CreateApplicationDto } from './dto/create-application.dto';
 import { ApplicationQueryDto } from './dto/application-query.dto';
 
@@ -76,6 +77,7 @@ export class ApplicationsService {
     @InjectRepository(Application)
     private applicationsRepo: Repository<Application>,
     private jobsService: JobsService,
+    private cvScorerService: CvScorerService,
   ) {}
 
   async apply(dto: CreateApplicationDto, candidate: User): Promise<Application> {
@@ -189,6 +191,30 @@ export class ApplicationsService {
     }
 
     return { succeeded, failed };
+  }
+
+  async scoreApplication(id: string, user: User): Promise<Application> {
+    const application = await this.applicationsRepo.findOne({
+      where: { id },
+      relations: { jobPosting: true, cv: true },
+    });
+    if (!application) throw new NotFoundException('Application not found');
+    await this.jobsService.findOne(application.jobPostingId, user);
+
+    const scoreResult = await this.cvScorerService.score({
+      jobPosting: application.jobPosting,
+      cvText: application.cv?.extractedText ?? null,
+      coverLetter: application.coverLetter,
+      yearsOfExperience: application.yearsOfExperience,
+      salaryExpectation: application.salaryExpectation,
+    });
+
+    application.aiScore = scoreResult.aiScore;
+    application.aiExtraction = scoreResult.aiExtraction;
+    application.aiStrengths = scoreResult.aiStrengths;
+    application.aiGaps = scoreResult.aiGaps;
+
+    return this.applicationsRepo.save(application);
   }
 
   private assertTransitionAllowed(

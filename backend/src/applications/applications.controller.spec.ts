@@ -25,6 +25,7 @@ describe('ApplicationsController', () => {
             findOne: jest.fn(),
             transition: jest.fn(),
             bulkTransition: jest.fn(),
+            scoreApplication: jest.fn(),
           },
         },
       ],
@@ -74,5 +75,10 @@ describe('ApplicationsController', () => {
       ApplicationStage.SCREENED,
       recruiter,
     );
+  });
+
+  it('score delegates to service.scoreApplication with id and current user', async () => {
+    await controller.score('app-1', recruiter);
+    expect(service.scoreApplication).toHaveBeenCalledWith('app-1', recruiter);
   });
 });

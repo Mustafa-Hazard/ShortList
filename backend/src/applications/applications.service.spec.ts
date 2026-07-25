@@ -10,6 +10,7 @@ import {
 import { ApplicationsService } from './applications.service';
 import { Application } from './application.entity';
 import { JobsService } from '../jobs/jobs.service';
+import { CvScorerService } from './cv-scorer.service';
 import { ApplicationStage } from '../common/enums/application-stage.enum';
 import { JobStatus, JobType } from '../common/enums/job.enum';
 import { Role } from '../common/enums/role.enum';
@@ -19,6 +20,7 @@ describe('ApplicationsService', () => {
   let service: ApplicationsService;
   let applicationsRepo: jest.Mocked<any>;
   let jobsService: jest.Mocked<JobsService>;
+  let cvScorerService: jest.Mocked<CvScorerService>;
 
   const candidate: User = {
     id: 'candidate-1',
@@ -79,12 +81,17 @@ describe('ApplicationsService', () => {
           provide: JobsService,
           useValue: { findOne: jest.fn() },
         },
+        {
+          provide: CvScorerService,
+          useValue: { score: jest.fn() },
+        },
       ],
     }).compile();
 
     service = module.get(ApplicationsService);
     applicationsRepo = module.get(getRepositoryToken(Application));
     jobsService = module.get(JobsService);
+    cvScorerService = module.get(CvScorerService);
   });
 
   describe('apply', () => {
@@ -306,6 +313,55 @@ describe('ApplicationsService', () => {
 
       expect(result.succeeded).toEqual(['app-1']);
       expect(result.failed.map((f) => f.id)).toEqual(['app-2', 'app-3']);
+    });
+  });
+
+  describe('scoreApplication', () => {
+    it('evaluates candidate CV/application and updates application AI fields', async () => {
+      const mockApp = {
+        ...baseApplication,
+        jobPosting: publishedPosting,
+        cv: { extractedText: 'CV text content' },
+      };
+      applicationsRepo.findOne.mockResolvedValue(mockApp as any);
+      jobsService.findOne.mockResolvedValue(publishedPosting as any);
+      cvScorerService.score.mockResolvedValue({
+        aiScore: 88,
+        aiExtraction: { name: 'Alice' },
+        aiStrengths: ['Great experience'],
+        aiGaps: ['None'],
+      });
+      applicationsRepo.save.mockImplementation((a: any) => Promise.resolve(a));
+
+      const result = await service.scoreApplication('app-1', recruiter);
+
+      expect(cvScorerService.score).toHaveBeenCalledWith(
+        expect.objectContaining({
+          cvText: 'CV text content',
+        }),
+      );
+      expect(result.aiScore).toBe(88);
+      expect(result.aiExtraction).toEqual({ name: 'Alice' });
+      expect(result.aiStrengths).toEqual(['Great experience']);
+      expect(result.aiGaps).toEqual(['None']);
+    });
+
+    it('throws NotFoundException when application does not exist', async () => {
+      applicationsRepo.findOne.mockResolvedValue(null);
+
+      await expect(
+        service.scoreApplication('missing-app', recruiter),
+      ).rejects.toThrow(NotFoundException);
+    });
+
+    it('forbids scoring an application for another company', async () => {
+      const otherCompanyRecruiter = { ...recruiter, companyId: 'company-2' };
+      applicationsRepo.findOne.mockResolvedValue({ ...baseApplication, jobPosting: publishedPosting } as any);
+      jobsService.findOne.mockRejectedValue(new ForbiddenException());
+
+      await expect(
+        service.scoreApplication('app-1', otherCompanyRecruiter as any),
+      ).rejects.toThrow(ForbiddenException);
     });
   });
 });
