@@ -24,6 +24,29 @@
   --line-bright: #3D5365;     /* Highlighted hairline */
 }
 
+/* Light Theme — Blueprint Drafting Paper under Daylight */
+[data-theme="light"] {
+  --bg-main: #F4F0E6;         /* Warm drafting paper cream */
+  --bg-panel: #E7E1D3;        /* Solid drafting board panel */
+  --bg-panel-hover: #DDD6C6;  /* Panel hover */
+  --fg-main: #162432;         /* Deep ink-navy body text */
+  --fg-muted: #576B7C;        /* Technical label grey */
+  --fg-dim: #8596A6;          /* Dim label text */
+
+  /* Brass remains the locked through-line accent */
+  --accent-brass: #C97A3D;
+  --accent-brass-glow: rgba(201, 122, 61, 0.2);
+
+  /* High contrast light mode signals */
+  --signal-green: #2A6B48;
+  --signal-green-bg: rgba(42, 107, 72, 0.15);
+  --signal-rust: #9E331B;
+  --signal-rust-bg: rgba(158, 51, 27, 0.15);
+
+  --line-grey: #C5BCAB;       /* Hairline drafting linework */
+  --line-bright: #B0A694;
+}
+
 * {
   box-sizing: border-box;
   margin: 0;
@@ -121,7 +144,14 @@ code, pre, .font-mono, .mono-tag {
   font-size: 0.75rem;
   font-weight: 700;
   color: var(--fg-muted);
-  transition: all 0.2s ease;
+  transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1), background-color 0.3s ease, border-color 0.3s ease, color 0.3s ease;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .station-indicator,
+  .transit-station-node {
+    transition: none !important;
+  }
 }
 
 .transit-station-node.active .station-indicator {
