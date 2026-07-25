@@ -6,6 +6,7 @@ import { LoginDto } from './dto/login.dto';
 import { RefreshDto } from './dto/refresh.dto';
 import { Public } from '../common/decorators/public.decorator';
 import { CurrentUser } from '../common/decorators/current-user.decorator';
+import { Role } from '../common/enums/role.enum';
 import { User } from '../users/user.entity';
 
 @ApiTags('auth')
@@ -17,6 +18,18 @@ export class AuthController {
   @Post('register')
   register(@Body() dto: RegisterDto) {
     return this.authService.register(dto);
+  }
+
+  @Public()
+  @Post('register/candidate')
+  registerCandidate(@Body() dto: RegisterDto) {
+    return this.authService.register({ ...dto, role: Role.CANDIDATE });
+  }
+
+  @Public()
+  @Post('register/recruiter')
+  registerRecruiter(@Body() dto: RegisterDto) {
+    return this.authService.register({ ...dto, role: Role.RECRUITER });
   }
 
   @Public()

@@ -39,12 +39,15 @@ export class AuthService {
       const company = await this.companiesService.create(dto.companyName);
       companyId = company.id;
     } else if (role === Role.RECRUITER || role === Role.HIRING_MANAGER) {
-      if (!dto.companyId) {
-        throw new BadRequestException(`companyId is required to register as ${role}`);
+      if (dto.companyName && !dto.companyId) {
+        const company = await this.companiesService.create(dto.companyName);
+        companyId = company.id;
+      } else if (dto.companyId) {
+        await this.companiesService.findById(dto.companyId);
+        companyId = dto.companyId;
+      } else {
+        throw new BadRequestException(`companyName or companyId is required to register as ${role}`);
       }
-      // Throws NotFoundException if the company doesn't exist.
-      await this.companiesService.findById(dto.companyId);
-      companyId = dto.companyId;
     }
 
     const user = await this.usersService.create({

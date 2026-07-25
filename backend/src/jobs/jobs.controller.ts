@@ -89,6 +89,18 @@ export class JobsController {
   }
 
   @Roles(Role.RECRUITER, Role.HIRING_MANAGER, Role.ADMIN)
+  @Post('generate-description')
+  async generateDescriptionDirect(@Body() body: any) {
+    const { title, department, requiredSkills } = body;
+    const description = await this.jobsService.generateDescriptionDirect(
+      title,
+      department,
+      requiredSkills,
+    );
+    return { description };
+  }
+
+  @Roles(Role.RECRUITER, Role.HIRING_MANAGER, Role.ADMIN)
   @Get(':id/stats')
   stats(@Param('id', ParseUUIDPipe) id: string, @CurrentUser() user: User) {
     return this.jobsService.stats(id, user);

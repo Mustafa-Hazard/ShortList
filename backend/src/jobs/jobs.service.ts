@@ -8,7 +8,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { JobPosting } from './job-posting.entity';
 import { Application } from '../applications/application.entity';
-import { JobStatus } from '../common/enums/job.enum';
+import { JobStatus, JobType } from '../common/enums/job.enum';
 import { ApplicationStage } from '../common/enums/application-stage.enum';
 import { Role } from '../common/enums/role.enum';
 import { User } from '../users/user.entity';
@@ -207,6 +207,23 @@ export class JobsService {
       stageCounts,
       daysOpen,
     };
+  }
+
+  async generateDescriptionDirect(
+    title: string,
+    department: string,
+    requiredSkills: string[],
+  ): Promise<string> {
+    return this.jdGeneratorService.generateDescription({
+      title,
+      department,
+      type: JobType.FULL_TIME,
+      salaryMin: null,
+      salaryMax: null,
+      requiredSkills: requiredSkills || [],
+      responsibilities: 'Core engineering responsibilities',
+      cultureNotes: null,
+    });
   }
 
   // Shared by update/remove/transition/stats: load a posting and confirm the
