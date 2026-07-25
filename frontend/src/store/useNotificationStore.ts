@@ -29,7 +29,7 @@ export const useNotificationStore = create<NotificationState>((set, get) => ({
 
   connectSocket: (userId: string) => {
     if (get().socket) return;
-    const socket = io('/', {
+    const socket = io('http://localhost:3000', {
       query: { userId },
       transports: ['websocket', 'polling'],
     });
