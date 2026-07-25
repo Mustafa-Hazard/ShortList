@@ -1,6 +1,6 @@
 import { useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { Sparkles, LogOut, Briefcase, User as UserIcon, Shield, Layers } from 'lucide-react';
+import { LogOut, Layers } from 'lucide-react';
 import { useAuthStore, Role } from '../store/useAuthStore';
 import { useNotificationStore } from '../store/useNotificationStore';
 import { NotificationBell } from './NotificationBell';
@@ -40,27 +40,11 @@ export function Navbar() {
     }
   };
 
-  const getRoleBadgeClass = (role?: Role) => {
-    switch (role) {
-      case Role.CANDIDATE:
-        return 'badge-primary';
-      case Role.RECRUITER:
-        return 'badge-ai';
-      case Role.HIRING_MANAGER:
-        return 'badge-warning';
-      case Role.ADMIN:
-        return 'badge-danger';
-      default:
-        return 'badge-primary';
-    }
-  };
-
   return (
     <header
       style={{
-        borderBottom: '1px solid var(--border-color)',
-        background: 'rgba(11, 15, 25, 0.8)',
-        backdropFilter: 'blur(12px)',
+        borderBottom: '1px solid var(--line-grey)',
+        background: '#0B131C',
         position: 'sticky',
         top: 0,
         zIndex: 100,
@@ -70,7 +54,7 @@ export function Navbar() {
         style={{
           maxWidth: '1200px',
           margin: '0 auto',
-          padding: '0.8rem 1.5rem',
+          padding: '0.75rem 1.5rem',
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'space-between',
@@ -82,26 +66,28 @@ export function Navbar() {
             display: 'flex',
             alignItems: 'center',
             gap: '0.6rem',
-            fontSize: '1.25rem',
+            fontFamily: 'var(--font-display)',
+            fontSize: '1.2rem',
             fontWeight: 800,
-            background: 'linear-gradient(135deg, #a855f7 0%, #6366f1 100%)',
-            WebkitBackgroundClip: 'text',
-            WebkitTextFillColor: 'transparent',
+            color: 'var(--fg-main)',
+            textTransform: 'uppercase',
+            letterSpacing: '0.06em',
           }}
         >
           <div
             style={{
-              background: 'linear-gradient(135deg, #a855f7 0%, #6366f1 100%)',
-              padding: '0.35rem',
-              borderRadius: '8px',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
+              border: '1px solid var(--accent-brass)',
+              background: 'rgba(201, 122, 61, 0.15)',
+              padding: '0.3rem 0.5rem',
+              borderRadius: '2px',
+              color: 'var(--accent-brass)',
+              fontFamily: 'var(--font-mono)',
+              fontSize: '0.75rem',
             }}
           >
-            <Sparkles size={20} color="white" />
+            [TB-01]
           </div>
-          TalentBridge
+          TALENTBRIDGE
         </Link>
 
         {user && (
@@ -111,21 +97,17 @@ export function Navbar() {
               className="btn btn-secondary btn-sm"
               style={{ gap: '0.4rem' }}
             >
-              {user.role === Role.CANDIDATE && <Briefcase size={14} />}
-              {user.role === Role.RECRUITER && <Layers size={14} />}
-              {user.role === Role.HIRING_MANAGER && <UserIcon size={14} />}
-              {user.role === Role.ADMIN && <Shield size={14} />}
-              Dashboard
+              <Layers size={14} /> Control Board
             </Link>
 
             <NotificationBell />
 
-            <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
               <div style={{ textAlign: 'right', display: 'flex', flexDirection: 'column' }}>
-                <span style={{ fontSize: '0.8rem', fontWeight: 600 }}>
+                <span style={{ fontSize: '0.8rem', fontWeight: 600, color: 'var(--fg-main)' }}>
                   {user.firstName} {user.lastName}
                 </span>
-                <span className={`badge ${getRoleBadgeClass(user.role)}`} style={{ fontSize: '0.65rem', alignSelf: 'flex-end' }}>
+                <span className="tag-mono tag-brass" style={{ fontSize: '0.62rem', alignSelf: 'flex-end' }}>
                   {user.role.replace('_', ' ').toUpperCase()}
                 </span>
               </div>
@@ -135,9 +117,9 @@ export function Navbar() {
                 className="btn btn-secondary btn-sm"
                 onClick={handleLogout}
                 title="Logout"
-                style={{ padding: '0.4rem' }}
+                style={{ padding: '0.45rem' }}
               >
-                <LogOut size={16} />
+                <LogOut size={15} />
               </button>
             </div>
           </div>
