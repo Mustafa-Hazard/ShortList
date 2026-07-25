@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { Sparkles, User, Briefcase, UserPlus } from 'lucide-react';
+import { User, Briefcase, UserPlus } from 'lucide-react';
 import { useAuthStore } from '../store/useAuthStore';
 
 export function RegisterPage() {
@@ -34,7 +34,7 @@ export function RegisterPage() {
   return (
     <div
       style={{
-        minHeight: 'calc(100vh - 65px)',
+        minHeight: 'calc(100vh - 60px)',
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
@@ -42,158 +42,154 @@ export function RegisterPage() {
       }}
     >
       <div
-        className="glass-card animate-fade-in"
+        className="blueprint-panel"
         style={{
           width: '100%',
           maxWidth: '500px',
-          padding: '2.5rem',
         }}
       >
-        <div style={{ textAlign: 'center', marginBottom: '1.5rem' }}>
-          <div
-            style={{
-              display: 'inline-flex',
-              padding: '0.6rem',
-              borderRadius: '12px',
-              background: 'linear-gradient(135deg, #a855f7 0%, #6366f1 100%)',
-              marginBottom: '1rem',
-            }}
-          >
-            <Sparkles size={28} color="white" />
-          </div>
-          <h2 style={{ fontSize: '1.75rem', fontWeight: 800 }}>Create an Account</h2>
-          <p style={{ color: 'var(--text-secondary)', fontSize: '0.875rem', marginTop: '0.3rem' }}>
-            Join TalentBridge AI Recruitment Portal
-          </p>
+        <div className="blueprint-panel-header">
+          <span className="mono-tag tag-brass">[REGISTER 01]</span>
+          <span style={{ fontFamily: 'var(--font-mono)', fontSize: '0.7rem', color: 'var(--fg-muted)' }}>NEW OPERATOR MANIFEST</span>
         </div>
 
-        {/* Account Type Toggle */}
-        <div
-          style={{
-            display: 'grid',
-            gridTemplateColumns: '1fr 1fr',
-            gap: '0.5rem',
-            marginBottom: '1.5rem',
-            background: 'rgba(0, 0, 0, 0.2)',
-            padding: '0.3rem',
-            borderRadius: '10px',
-          }}
-        >
-          <button
-            type="button"
-            className={`btn ${accountType === 'candidate' ? 'btn-primary' : 'btn-secondary'}`}
-            onClick={() => setAccountType('candidate')}
-            style={{ fontSize: '0.8rem', gap: '0.4rem' }}
-          >
-            <User size={16} /> Candidate
-          </button>
-          <button
-            type="button"
-            className={`btn ${accountType === 'recruiter' ? 'btn-ai' : 'btn-secondary'}`}
-            onClick={() => setAccountType('recruiter')}
-            style={{ fontSize: '0.8rem', gap: '0.4rem' }}
-          >
-            <Briefcase size={16} /> Recruiter
-          </button>
-        </div>
+        <div style={{ padding: '2rem' }}>
+          <div style={{ marginBottom: '1.5rem' }}>
+            <h2 style={{ fontSize: '1.5rem', fontWeight: 800 }}>Account Registration</h2>
+            <p style={{ color: 'var(--fg-muted)', fontSize: '0.8125rem', marginTop: '0.2rem' }}>
+              Register candidate or recruiter access to TalentBridge transit line
+            </p>
+          </div>
 
-        {error && (
+          {/* Account Type Toggle */}
           <div
             style={{
-              padding: '0.75rem 1rem',
-              borderRadius: '8px',
-              background: 'var(--danger-bg)',
-              border: '1px solid rgba(239, 68, 68, 0.3)',
-              color: '#f87171',
-              fontSize: '0.8125rem',
-              marginBottom: '1.25rem',
+              display: 'grid',
+              gridTemplateColumns: '1fr 1fr',
+              gap: '0.5rem',
+              marginBottom: '1.5rem',
+              background: '#0B131C',
+              padding: '0.25rem',
+              border: '1px solid var(--line-grey)',
             }}
           >
-            {error}
-          </div>
-        )}
-
-        <form onSubmit={handleRegister}>
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.75rem' }}>
-            <div className="form-group">
-              <label className="form-label">First Name</label>
-              <input
-                type="text"
-                className="form-input"
-                value={firstName}
-                onChange={(e) => setFirstName(e.target.value)}
-                placeholder="Jane"
-                required
-              />
-            </div>
-            <div className="form-group">
-              <label className="form-label">Last Name</label>
-              <input
-                type="text"
-                className="form-input"
-                value={lastName}
-                onChange={(e) => setLastName(e.target.value)}
-                placeholder="Doe"
-                required
-              />
-            </div>
+            <button
+              type="button"
+              className={`btn ${accountType === 'candidate' ? 'btn-brass' : 'btn-secondary'}`}
+              onClick={() => setAccountType('candidate')}
+              style={{ fontSize: '0.75rem' }}
+            >
+              <User size={14} /> Candidate
+            </button>
+            <button
+              type="button"
+              className={`btn ${accountType === 'recruiter' ? 'btn-brass' : 'btn-secondary'}`}
+              onClick={() => setAccountType('recruiter')}
+              style={{ fontSize: '0.75rem' }}
+            >
+              <Briefcase size={14} /> Recruiter
+            </button>
           </div>
 
-          <div className="form-group">
-            <label className="form-label">Email Address</label>
-            <input
-              type="email"
-              className="form-input"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              placeholder="jane.doe@example.com"
-              required
-            />
-          </div>
-
-          <div className="form-group">
-            <label className="form-label">Password</label>
-            <input
-              type="password"
-              className="form-input"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              placeholder="Password123!"
-              required
-            />
-          </div>
-
-          {accountType === 'recruiter' && (
-            <div className="form-group">
-              <label className="form-label">Company Name</label>
-              <input
-                type="text"
-                className="form-input"
-                value={companyName}
-                onChange={(e) => setCompanyName(e.target.value)}
-                placeholder="Acme Corporation"
-                required
-              />
+          {error && (
+            <div
+              style={{
+                padding: '0.75rem 1rem',
+                borderRadius: '2px',
+                background: 'var(--signal-rust-bg)',
+                border: '1px solid var(--signal-rust)',
+                color: '#d96950',
+                fontSize: '0.8125rem',
+                fontFamily: 'var(--font-mono)',
+                marginBottom: '1.25rem',
+              }}
+            >
+              {error}
             </div>
           )}
 
-          <button
-            type="submit"
-            className={`btn ${accountType === 'recruiter' ? 'btn-ai' : 'btn-primary'}`}
-            disabled={isLoading}
-            style={{ width: '100%', marginTop: '0.5rem', padding: '0.75rem' }}
-          >
-            <UserPlus size={18} />
-            {isLoading ? 'Creating Account...' : 'Register'}
-          </button>
-        </form>
+          <form onSubmit={handleRegister}>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.75rem' }}>
+              <div className="form-group">
+                <label className="form-label">FIRST NAME</label>
+                <input
+                  type="text"
+                  className="form-input"
+                  value={firstName}
+                  onChange={(e) => setFirstName(e.target.value)}
+                  placeholder="Jane"
+                  required
+                />
+              </div>
+              <div className="form-group">
+                <label className="form-label">LAST NAME</label>
+                <input
+                  type="text"
+                  className="form-input"
+                  value={lastName}
+                  onChange={(e) => setLastName(e.target.value)}
+                  placeholder="Doe"
+                  required
+                />
+              </div>
+            </div>
 
-        <p style={{ textAlign: 'center', marginTop: '1.5rem', fontSize: '0.8125rem', color: 'var(--text-secondary)' }}>
-          Already have an account?{' '}
-          <Link to="/login" style={{ color: 'var(--primary)', fontWeight: 600 }}>
-            Sign in
-          </Link>
-        </p>
+            <div className="form-group">
+              <label className="form-label">EMAIL ADDRESS</label>
+              <input
+                type="email"
+                className="form-input"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                placeholder="jane.doe@example.com"
+                required
+              />
+            </div>
+
+            <div className="form-group">
+              <label className="form-label">ACCESS KEY [PASSWORD]</label>
+              <input
+                type="password"
+                className="form-input"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                placeholder="Password123!"
+                required
+              />
+            </div>
+
+            {accountType === 'recruiter' && (
+              <div className="form-group">
+                <label className="form-label">COMPANY ORGANIZATION NAME</label>
+                <input
+                  type="text"
+                  className="form-input"
+                  value={companyName}
+                  onChange={(e) => setCompanyName(e.target.value)}
+                  placeholder="Acme Corporation"
+                  required
+                />
+              </div>
+            )}
+
+            <button
+              type="submit"
+              className="btn btn-brass"
+              disabled={isLoading}
+              style={{ width: '100%', marginTop: '0.5rem', padding: '0.75rem' }}
+            >
+              <UserPlus size={16} />
+              {isLoading ? 'CREATING MANIFEST...' : 'REGISTER ACCOUNT'}
+            </button>
+          </form>
+
+          <p style={{ textAlign: 'center', marginTop: '1.5rem', fontSize: '0.8rem', color: 'var(--fg-muted)' }}>
+            Already have an account?{' '}
+            <Link to="/login" style={{ color: 'var(--accent-brass)', fontWeight: 600 }}>
+              Sign in
+            </Link>
+          </p>
+        </div>
       </div>
     </div>
   );

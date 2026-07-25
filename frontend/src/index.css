@@ -1,39 +1,27 @@
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500;700&family=Space+Grotesk:wght@600;700;800&display=swap');
 
 :root {
-  --font-family: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-  
-  /* Color System - Slate / Dark Violet Glass */
-  --bg-main: #0b0f19;
-  --bg-secondary: #111827;
-  --bg-card: rgba(17, 24, 39, 0.7);
-  --bg-card-hover: rgba(31, 41, 55, 0.8);
-  --bg-glass: rgba(255, 255, 255, 0.03);
-  --border-color: rgba(255, 255, 255, 0.08);
-  --border-glow: rgba(139, 92, 246, 0.3);
+  --font-display: 'Space Grotesk', sans-serif;
+  --font-mono: 'JetBrains Mono', monospace;
+  --font-body: 'Inter', sans-serif;
 
-  /* Accents */
-  --primary: #6366f1;
-  --primary-hover: #4f46e5;
-  --primary-glow: rgba(99, 102, 241, 0.4);
-  --accent: #8b5cf6;
-  --accent-glow: rgba(139, 92, 246, 0.5);
-  --ai-purple: #a855f7;
-  --ai-cyan: #06b6d4;
-  
-  /* Status Colors */
-  --success: #10b981;
-  --success-bg: rgba(16, 185, 129, 0.1);
-  --warning: #f59e0b;
-  --warning-bg: rgba(245, 158, 11, 0.1);
-  --danger: #ef4444;
-  --danger-bg: rgba(239, 68, 68, 0.1);
-  --info: #3b82f6;
+  /* Color Palette — Drafting-Table Ink & Brass */
+  --bg-main: #0F1A24;         /* Ink-Navy background */
+  --bg-panel: #14222E;        /* Blueprint panel surface */
+  --bg-panel-hover: #1A2D3D;  /* Raised panel hover */
+  --fg-main: #E8E2D0;         /* Aged paper text */
+  --fg-muted: #8FA2B3;        /* Technical label grey */
+  --fg-dim: #546A7B;          /* Dim linework text */
 
-  /* Text Colors */
-  --text-primary: #f9fafb;
-  --text-secondary: #9ca3af;
-  --text-muted: #6b7280;
+  /* Accents & Signals */
+  --accent-brass: #C97A3D;    /* Brass/sepia - active station & primary ops */
+  --accent-brass-glow: rgba(201, 122, 61, 0.25);
+  --signal-green: #5B8A72;    /* Signal green - cleared/approved state ONLY */
+  --signal-green-bg: rgba(91, 138, 114, 0.15);
+  --signal-rust: #B5482F;     /* Rust red - blocked/denied state ONLY */
+  --signal-rust-bg: rgba(181, 72, 47, 0.15);
+  --line-grey: #2A3B47;       /* Hairline divider / track blue-grey */
+  --line-bright: #3D5365;     /* Highlighted hairline */
 }
 
 * {
@@ -43,106 +31,197 @@
 }
 
 body {
-  font-family: var(--font-family);
+  font-family: var(--font-body);
   background-color: var(--bg-main);
-  color: var(--text-primary);
+  color: var(--fg-main);
   line-height: 1.5;
   min-height: 100vh;
   -webkit-font-smoothing: antialiased;
   background-image: 
-    radial-gradient(at 0% 0%, rgba(99, 102, 241, 0.15) 0px, transparent 50%),
-    radial-gradient(at 100% 100%, rgba(168, 85, 247, 0.12) 0px, transparent 50%);
-  background-attachment: fixed;
+    linear-gradient(to right, rgba(42, 59, 71, 0.15) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(42, 59, 71, 0.15) 1px, transparent 1px);
+  background-size: 32px 32px;
 }
 
-a {
-  color: inherit;
-  text-decoration: none;
+h1, h2, h3, h4, .font-display {
+  font-family: var(--font-display);
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
 }
 
-/* Glassmorphism Cards */
-.glass-card {
-  background: var(--bg-card);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
-  border: 1px solid var(--border-color);
-  border-radius: 12px;
-  box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
-  transition: all 0.2s ease-in-out;
+code, pre, .font-mono, .mono-tag {
+  font-family: var(--font-mono);
 }
 
-.glass-card:hover {
-  border-color: rgba(255, 255, 255, 0.15);
-  box-shadow: 0 12px 40px 0 rgba(0, 0, 0, 0.45);
+/* Blueprint Panels (No frosted glass / no generic pills) */
+.blueprint-panel {
+  background: var(--bg-panel);
+  border: 1px solid var(--line-grey);
+  border-radius: 4px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
 }
 
-.glass-card-ai {
-  background: linear-gradient(135deg, rgba(168, 85, 247, 0.1) 0%, rgba(99, 102, 241, 0.05) 100%);
-  border: 1px solid rgba(168, 85, 247, 0.3);
-  box-shadow: 0 0 20px rgba(168, 85, 247, 0.15);
+.blueprint-panel-header {
+  padding: 0.75rem 1.25rem;
+  border-bottom: 1px solid var(--line-grey);
+  background: rgba(0, 0, 0, 0.2);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
 }
 
-/* Buttons */
+/* Transit Line Signature Element */
+.transit-line-container {
+  padding: 1.5rem;
+  background: #111C27;
+  border: 1px solid var(--line-grey);
+  border-radius: 4px;
+  overflow-x: auto;
+}
+
+.transit-track {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  position: relative;
+  min-width: 700px;
+  padding: 1rem 0;
+}
+
+.transit-track::before {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 30px;
+  right: 30px;
+  height: 2px;
+  background: var(--line-grey);
+  z-index: 1;
+}
+
+.transit-station-node {
+  position: relative;
+  z-index: 2;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  cursor: pointer;
+}
+
+.station-indicator {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: var(--bg-main);
+  border: 2px solid var(--line-grey);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: var(--fg-muted);
+  transition: all 0.2s ease;
+}
+
+.transit-station-node.active .station-indicator {
+  border-color: var(--accent-brass);
+  background: var(--accent-brass);
+  color: #0F1A24;
+  box-shadow: 0 0 12px var(--accent-brass-glow);
+}
+
+.transit-station-node.passed .station-indicator {
+  border-color: var(--signal-green);
+  color: var(--signal-green);
+}
+
+.transit-station-node.junction .station-indicator {
+  border-radius: 2px;
+  transform: rotate(45deg);
+}
+
+.transit-station-node.junction .station-indicator span {
+  transform: rotate(-45deg);
+}
+
+.station-label {
+  font-family: var(--font-mono);
+  font-size: 0.7rem;
+  text-transform: uppercase;
+  color: var(--fg-muted);
+  margin-top: 0.5rem;
+  letter-spacing: 0.05em;
+}
+
+.transit-station-node.active .station-label {
+  color: var(--accent-brass);
+  font-weight: 700;
+}
+
+/* Buttons — Brass & Tactical Line Style */
 .btn {
   display: inline-flex;
   align-items: center;
   justify-content: center;
   gap: 0.5rem;
-  padding: 0.6rem 1.2rem;
-  font-size: 0.875rem;
-  font-weight: 600;
-  border-radius: 8px;
+  padding: 0.55rem 1.1rem;
+  font-family: var(--font-mono);
+  font-size: 0.8rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  border-radius: 2px;
   border: 1px solid transparent;
   cursor: pointer;
-  transition: all 0.2s ease;
+  transition: all 0.15s ease;
 }
 
-.btn-primary {
-  background: linear-gradient(135deg, var(--primary) 0%, var(--accent) 100%);
-  color: white;
-  box-shadow: 0 4px 14px var(--primary-glow);
+.btn-primary, .btn-brass {
+  background: var(--accent-brass);
+  color: #0F1A24;
+  border-color: var(--accent-brass);
 }
 
-.btn-primary:hover {
-  transform: translateY(-1px);
-  box-shadow: 0 6px 20px var(--primary-glow);
+.btn-primary:hover, .btn-brass:hover {
+  background: #d88646;
+  box-shadow: 0 2px 10px var(--accent-brass-glow);
 }
 
 .btn-secondary {
-  background: rgba(255, 255, 255, 0.05);
-  border-color: var(--border-color);
-  color: var(--text-primary);
+  background: var(--bg-panel);
+  border-color: var(--line-grey);
+  color: var(--fg-main);
 }
 
 .btn-secondary:hover {
-  background: rgba(255, 255, 255, 0.1);
-  border-color: rgba(255, 255, 255, 0.2);
+  background: var(--bg-panel-hover);
+  border-color: var(--line-bright);
 }
 
-.btn-ai {
-  background: linear-gradient(135deg, #a855f7 0%, #ec4899 100%);
-  color: white;
-  box-shadow: 0 4px 14px rgba(168, 85, 247, 0.4);
+.btn-signal-green {
+  background: var(--signal-green-bg);
+  border-color: rgba(91, 138, 114, 0.4);
+  color: #79ab92;
 }
 
-.btn-ai:hover {
-  transform: translateY(-1px);
-  box-shadow: 0 6px 20px rgba(168, 85, 247, 0.6);
+.btn-signal-green:hover {
+  background: rgba(91, 138, 114, 0.25);
 }
 
-.btn-danger {
-  background: var(--danger-bg);
-  border-color: rgba(239, 68, 68, 0.3);
-  color: #f87171;
+.btn-signal-rust {
+  background: var(--signal-rust-bg);
+  border-color: rgba(181, 72, 47, 0.4);
+  color: #d96950;
 }
 
-.btn-danger:hover {
-  background: rgba(239, 68, 68, 0.2);
+.btn-signal-rust:hover {
+  background: rgba(181, 72, 47, 0.25);
 }
 
 .btn-sm {
-  padding: 0.35rem 0.75rem;
-  font-size: 0.75rem;
+  padding: 0.35rem 0.65rem;
+  font-size: 0.72rem;
 }
 
 /* Form Controls */
@@ -154,87 +233,66 @@ a {
 }
 
 .form-label {
-  font-size: 0.8125rem;
-  font-weight: 500;
-  color: var(--text-secondary);
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  color: var(--fg-muted);
+  letter-spacing: 0.05em;
 }
 
 .form-input, .form-select, .form-textarea {
   width: 100%;
-  padding: 0.65rem 0.85rem;
-  background: rgba(17, 24, 39, 0.8);
-  border: 1px solid var(--border-color);
-  border-radius: 8px;
-  color: var(--text-primary);
-  font-family: inherit;
+  padding: 0.6rem 0.75rem;
+  background: #0B131C;
+  border: 1px solid var(--line-grey);
+  border-radius: 2px;
+  color: var(--fg-main);
+  font-family: var(--font-body);
   font-size: 0.875rem;
   outline: none;
-  transition: border-color 0.2s ease;
+  transition: border-color 0.15s ease;
 }
 
 .form-input:focus, .form-select:focus, .form-textarea:focus {
-  border-color: var(--primary);
-  box-shadow: 0 0 0 2px var(--primary-glow);
+  border-color: var(--accent-brass);
 }
 
-/* Badges */
-.badge {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.25rem;
-  padding: 0.2rem 0.6rem;
-  font-size: 0.75rem;
-  font-weight: 600;
-  border-radius: 9999px;
-  border: 1px solid transparent;
+/* Monospace Stage Tags & Badges */
+.tag-mono {
+  font-family: var(--font-mono);
+  font-size: 0.7rem;
+  padding: 0.2rem 0.5rem;
+  border-radius: 2px;
+  border: 1px solid var(--line-grey);
+  background: rgba(0, 0, 0, 0.3);
+  color: var(--fg-muted);
+  text-transform: uppercase;
 }
 
-.badge-primary {
-  background: rgba(99, 102, 241, 0.15);
-  border-color: rgba(99, 102, 241, 0.3);
-  color: #818cf8;
+.tag-brass {
+  border-color: var(--accent-brass);
+  color: var(--accent-brass);
+  background: rgba(201, 122, 61, 0.1);
 }
 
-.badge-ai {
-  background: rgba(168, 85, 247, 0.15);
-  border-color: rgba(168, 85, 247, 0.3);
-  color: #c084fc;
+.tag-green {
+  border-color: var(--signal-green);
+  color: #79ab92;
+  background: var(--signal-green-bg);
 }
 
-.badge-success {
-  background: var(--success-bg);
-  border-color: rgba(16, 185, 129, 0.3);
-  color: #34d399;
-}
-
-.badge-warning {
-  background: var(--warning-bg);
-  border-color: rgba(245, 158, 11, 0.3);
-  color: #fbbf24;
-}
-
-.badge-danger {
-  background: var(--danger-bg);
-  border-color: rgba(239, 68, 68, 0.3);
-  color: #f87171;
-}
-
-/* Animations */
-@keyframes fadeIn {
-  from { opacity: 0; transform: translateY(6px); }
-  to { opacity: 1; transform: translateY(0); }
-}
-
-.animate-fade-in {
-  animation: fadeIn 0.3s ease-out forwards;
+.tag-rust {
+  border-color: var(--signal-rust);
+  color: #d96950;
+  background: var(--signal-rust-bg);
 }
 
 /* Modal Overlay */
 .modal-overlay {
   position: fixed;
   inset: 0;
-  background: rgba(0, 0, 0, 0.7);
-  backdrop-filter: blur(4px);
+  background: rgba(8, 13, 19, 0.85);
+  backdrop-filter: blur(2px);
   display: flex;
   align-items: center;
   justify-content: center;

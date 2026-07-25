@@ -1,7 +1,8 @@
 import { useState, useEffect } from 'react';
-import { Briefcase, Send, Clock, Calendar, Sparkles, FileCheck } from 'lucide-react';
+import { Briefcase, Send, Clock, Calendar, FileCheck } from 'lucide-react';
 import { apiClient } from '../api/client';
 import { useAuthStore } from '../store/useAuthStore';
+import { TransitLine } from '../components/TransitLine';
 
 export function CandidateDashboard() {
   const { user } = useAuthStore();
@@ -61,7 +62,6 @@ export function CandidateDashboard() {
 
       const application = appRes.data;
 
-      // Upload CV if selected
       if (cvFile && application?.id) {
         const formData = new FormData();
         formData.append('file', cvFile);
@@ -75,7 +75,7 @@ export function CandidateDashboard() {
       fetchApplications();
       setActiveTab('applications');
     } catch (err: any) {
-      alert(err.response?.data?.message || 'Failed to submit application');
+      alert(err.response?.data?.message || 'Application submission failed');
     } finally {
       setApplyLoading(false);
     }
@@ -128,52 +128,35 @@ export function CandidateDashboard() {
     }
   };
 
-  const getStageBadgeClass = (stage: string) => {
-    switch (stage) {
-      case 'applied':
-        return 'badge-primary';
-      case 'screened':
-        return 'badge-warning';
-      case 'shortlisted':
-        return 'badge-ai';
-      case 'interview_scheduled':
-        return 'badge-warning';
-      case 'offer':
-        return 'badge-success';
-      case 'hired':
-        return 'badge-success';
-      case 'rejected':
-        return 'badge-danger';
-      default:
-        return 'badge-primary';
-    }
-  };
-
   return (
     <div style={{ maxWidth: '1200px', margin: '0 auto', padding: '2rem 1.5rem' }}>
-      {/* Header Banner */}
-      <div className="glass-card animate-fade-in" style={{ padding: '2rem', marginBottom: '2rem' }}>
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+      {/* Blueprint Control Banner */}
+      <div className="blueprint-panel" style={{ padding: '1.75rem', marginBottom: '2rem' }}>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '1rem' }}>
           <div>
-            <h1 style={{ fontSize: '1.75rem', fontWeight: 800 }}>Welcome, {user?.firstName}!</h1>
-            <p style={{ color: 'var(--text-secondary)', marginTop: '0.2rem' }}>
-              Explore top tech roles and track your AI-assisted application status.
+            <span className="mono-tag tag-brass">[CANDIDATE TRANSIT TERMINAL]</span>
+            <h1 style={{ fontSize: '1.6rem', fontWeight: 800, marginTop: '0.4rem' }}>
+              Welcome, {user?.firstName} {user?.lastName}
+            </h1>
+            <p style={{ color: 'var(--fg-muted)', fontSize: '0.85rem', marginTop: '0.2rem' }}>
+              Track your individual station position on the TalentBridge transit line.
             </p>
           </div>
+
           <div style={{ display: 'flex', gap: '0.75rem' }}>
             <button
               type="button"
-              className={`btn ${activeTab === 'browse' ? 'btn-primary' : 'btn-secondary'}`}
+              className={`btn ${activeTab === 'browse' ? 'btn-brass' : 'btn-secondary'}`}
               onClick={() => setActiveTab('browse')}
             >
-              <Briefcase size={16} /> Browse Job Openings ({jobs.length})
+              <Briefcase size={15} /> OPEN REQUISITIONS ({jobs.length})
             </button>
             <button
               type="button"
-              className={`btn ${activeTab === 'applications' ? 'btn-primary' : 'btn-secondary'}`}
+              className={`btn ${activeTab === 'applications' ? 'btn-brass' : 'btn-secondary'}`}
               onClick={() => setActiveTab('applications')}
             >
-              <Clock size={16} /> My Applications ({applications.length})
+              <Clock size={15} /> MY MANIFESTS ({applications.length})
             </button>
           </div>
         </div>
@@ -181,102 +164,104 @@ export function CandidateDashboard() {
 
       {/* Tab 1: Browse Jobs */}
       {activeTab === 'browse' && (
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(350px, 1fr))', gap: '1.5rem' }}>
-          {jobs.map((job) => (
-            <div key={job.id} className="glass-card" style={{ padding: '1.5rem', display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
-              <div>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-                  <h3 style={{ fontSize: '1.15rem', fontWeight: 700 }}>{job.title}</h3>
-                  <span className="badge badge-primary">{job.type}</span>
-                </div>
-                <p style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', marginTop: '0.3rem' }}>
-                  {job.department}
-                </p>
-
-                {job.salaryMin && job.salaryMax && (
-                  <p style={{ fontSize: '0.85rem', color: 'var(--success)', fontWeight: 600, marginTop: '0.5rem' }}>
-                    ${job.salaryMin.toLocaleString()} - ${job.salaryMax.toLocaleString()} / year
-                  </p>
-                )}
-
-                <div style={{ marginTop: '1rem' }}>
-                  <span style={{ fontSize: '0.75rem', fontWeight: 600, color: 'var(--text-muted)', display: 'block', marginBottom: '0.3rem' }}>
-                    REQUIRED SKILLS:
-                  </span>
-                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.4rem' }}>
-                    {job.requiredSkills?.map((skill: string, idx: number) => (
-                      <span key={idx} className="badge badge-ai" style={{ fontSize: '0.7rem' }}>
-                        {skill}
-                      </span>
-                    ))}
-                  </div>
-                </div>
-
-                <p style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', marginTop: '1rem', lineClamp: 3, WebkitLineClamp: 3, display: '-webkit-box', WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>
-                  {job.description || job.responsibilities}
-                </p>
-              </div>
-
-              <button
-                type="button"
-                className="btn btn-primary"
-                onClick={() => setSelectedJob(job)}
-                style={{ marginTop: '1.5rem', width: '100%' }}
-              >
-                <Send size={16} /> Apply Now
-              </button>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(360px, 1fr))', gap: '1.5rem' }}>
+          {jobs.length === 0 ? (
+            <div className="blueprint-panel" style={{ padding: '3rem', textAlign: 'center', color: 'var(--fg-muted)', gridColumn: '1 / -1' }}>
+              No open job requisitions published on the transit line yet.
             </div>
-          ))}
+          ) : (
+            jobs.map((job) => (
+              <div key={job.id} className="blueprint-panel" style={{ padding: '1.5rem', display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
+                <div>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+                    <h3 style={{ fontSize: '1.1rem', fontWeight: 700 }}>{job.title}</h3>
+                    <span className="mono-tag tag-brass">{job.type}</span>
+                  </div>
+                  <p style={{ fontSize: '0.8rem', color: 'var(--fg-muted)', marginTop: '0.3rem', fontFamily: 'var(--font-mono)' }}>
+                    DEPT: {job.department.toUpperCase()}
+                  </p>
+
+                  {job.salaryMin && job.salaryMax && (
+                    <p style={{ fontSize: '0.85rem', color: 'var(--signal-green)', fontWeight: 600, marginTop: '0.5rem', fontFamily: 'var(--font-mono)' }}>
+                      ${job.salaryMin.toLocaleString()} - ${job.salaryMax.toLocaleString()} / YEAR
+                    </p>
+                  )}
+
+                  <div style={{ marginTop: '1rem' }}>
+                    <span style={{ fontSize: '0.7rem', fontWeight: 600, color: 'var(--fg-dim)', fontFamily: 'var(--font-mono)', display: 'block', marginBottom: '0.3rem' }}>
+                      REQUIRED SKILLS:
+                    </span>
+                    <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.35rem' }}>
+                      {job.requiredSkills?.map((skill: string, idx: number) => (
+                        <span key={idx} className="mono-tag" style={{ fontSize: '0.68rem' }}>
+                          {skill}
+                        </span>
+                      ))}
+                    </div>
+                  </div>
+
+                  <p style={{ fontSize: '0.85rem', color: 'var(--fg-muted)', marginTop: '1rem', lineClamp: 3, WebkitLineClamp: 3, display: '-webkit-box', WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>
+                    {job.description || job.responsibilities}
+                  </p>
+                </div>
+
+                <button
+                  type="button"
+                  className="btn btn-brass"
+                  onClick={() => setSelectedJob(job)}
+                  style={{ marginTop: '1.5rem', width: '100%' }}
+                >
+                  <Send size={15} /> Submit Candidate Manifest
+                </button>
+              </div>
+            ))
+          )}
         </div>
       )}
 
-      {/* Tab 2: My Applications */}
+      {/* Tab 2: My Applications (Single-Candidate Transit Line per Application) */}
       {activeTab === 'applications' && (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
           {applications.length === 0 ? (
-            <div className="glass-card" style={{ padding: '3rem', textAlign: 'center', color: 'var(--text-muted)' }}>
-              You haven't submitted any job applications yet. Browse the job board above to get started!
+            <div className="blueprint-panel" style={{ padding: '3rem', textAlign: 'center', color: 'var(--fg-muted)' }}>
+              No active candidate manifests on the transit line yet. Browse open requisitions to apply!
             </div>
           ) : (
             applications.map((app) => (
-              <div key={app.id} className="glass-card" style={{ padding: '1.5rem' }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '1rem' }}>
+              <div key={app.id} className="blueprint-panel" style={{ padding: '1.5rem' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '1rem', marginBottom: '1rem' }}>
                   <div>
-                    <h3 style={{ fontSize: '1.1rem', fontWeight: 700 }}>
-                      Application #{app.id.substring(0, 8)}
+                    <span className="mono-tag tag-brass">MANIFEST ID: [APP-{app.id.substring(0, 8).toUpperCase()}]</span>
+                    <h3 style={{ fontSize: '1.2rem', fontWeight: 700, marginTop: '0.3rem' }}>
+                      {app.jobPosting?.title || 'Engineer Requisition'}
                     </h3>
-                    <p style={{ fontSize: '0.8rem', color: 'var(--text-secondary)', marginTop: '0.2rem' }}>
-                      Applied on {new Date(app.createdAt).toLocaleDateString()}
-                    </p>
                   </div>
 
                   <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
-                    <span className={`badge ${getStageBadgeClass(app.stage)}`} style={{ fontSize: '0.85rem', padding: '0.3rem 0.8rem' }}>
-                      Stage: {app.stage.toUpperCase()}
-                    </span>
-
                     {app.stage === 'interview_scheduled' && (
                       <button
                         type="button"
-                        className="btn btn-ai btn-sm"
+                        className="btn btn-brass btn-sm"
                         onClick={() => openInterviewModal(app.id)}
                       >
-                        <Calendar size={14} /> View Interview Slots
+                        <Calendar size={14} /> Confirm Interview Slot
                       </button>
                     )}
 
                     {(app.stage === 'offer' || app.stage === 'hired') && (
                       <button
                         type="button"
-                        className="btn btn-success btn-sm"
+                        className="btn btn-signal-green btn-sm"
                         onClick={() => openOfferModal(app.id)}
-                        style={{ background: 'var(--success)', color: 'white' }}
                       >
-                        <FileCheck size={14} /> View Offer Letter
+                        <FileCheck size={14} /> Review Official Offer Letter
                       </button>
                     )}
                   </div>
                 </div>
+
+                {/* Signature Element: Personal Transit Line */}
+                <TransitLine currentStage={app.stage} scale="single" />
               </div>
             ))
           )}
@@ -286,17 +271,17 @@ export function CandidateDashboard() {
       {/* Apply Modal */}
       {selectedJob && (
         <div className="modal-overlay">
-          <div className="glass-card modal-content animate-fade-in" style={{ padding: '2rem' }}>
-            <h2 style={{ fontSize: '1.35rem', fontWeight: 800, marginBottom: '0.5rem' }}>
-              Apply for {selectedJob.title}
-            </h2>
-            <p style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', marginBottom: '1.5rem' }}>
-              Department: {selectedJob.department} | Type: {selectedJob.type}
-            </p>
+          <div className="blueprint-panel modal-content" style={{ padding: '2rem' }}>
+            <div style={{ marginBottom: '1.5rem' }}>
+              <span className="mono-tag tag-brass">[MANIFEST ENTRY]</span>
+              <h2 style={{ fontSize: '1.4rem', fontWeight: 800, marginTop: '0.3rem' }}>
+                Apply for {selectedJob.title}
+              </h2>
+            </div>
 
             <form onSubmit={handleApplySubmit}>
               <div className="form-group">
-                <label className="form-label">Years of Experience</label>
+                <label className="form-label">YEARS OF EXPERIENCE</label>
                 <input
                   type="number"
                   className="form-input"
@@ -308,7 +293,7 @@ export function CandidateDashboard() {
               </div>
 
               <div className="form-group">
-                <label className="form-label">Salary Expectation ($/year)</label>
+                <label className="form-label">ANNUAL SALARY EXPECTATION ($)</label>
                 <input
                   type="number"
                   className="form-input"
@@ -320,7 +305,7 @@ export function CandidateDashboard() {
               </div>
 
               <div className="form-group">
-                <label className="form-label">Upload CV (PDF file)</label>
+                <label className="form-label">UPLOAD CV DOCUMENT (PDF FILE)</label>
                 <input
                   type="file"
                   className="form-input"
@@ -330,13 +315,13 @@ export function CandidateDashboard() {
               </div>
 
               <div className="form-group">
-                <label className="form-label">Cover Letter / Note</label>
+                <label className="form-label">COVER NOTE / STATEMENT</label>
                 <textarea
                   className="form-textarea"
                   rows={4}
                   value={coverLetter}
                   onChange={(e) => setCoverLetter(e.target.value)}
-                  placeholder="Share why you are a great fit for this role..."
+                  placeholder="Summarize relevant engineering experience..."
                 />
               </div>
 
@@ -346,10 +331,10 @@ export function CandidateDashboard() {
                   className="btn btn-secondary"
                   onClick={() => setSelectedJob(null)}
                 >
-                  Cancel
+                  CANCEL
                 </button>
-                <button type="submit" className="btn btn-primary" disabled={applyLoading}>
-                  {applyLoading ? 'Submitting...' : 'Submit Application'}
+                <button type="submit" className="btn btn-brass" disabled={applyLoading}>
+                  {applyLoading ? 'SUBMITTING...' : 'SUBMIT MANIFEST'}
                 </button>
               </div>
             </form>
@@ -360,17 +345,13 @@ export function CandidateDashboard() {
       {/* Interview Slot Confirm Modal */}
       {selectedInterview && (
         <div className="modal-overlay">
-          <div className="glass-card modal-content animate-fade-in" style={{ padding: '2rem' }}>
-            <h2 style={{ fontSize: '1.35rem', fontWeight: 800, marginBottom: '0.5rem' }}>
-              Confirm Interview Slot
-            </h2>
-            <p style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', marginBottom: '1.5rem' }}>
-              Interview Type: <strong style={{ color: 'var(--primary)' }}>{selectedInterview.type.toUpperCase()}</strong>
-            </p>
-
-            <h4 style={{ fontSize: '0.9rem', fontWeight: 600, marginBottom: '0.75rem' }}>
-              Recruiter Proposed Slots:
-            </h4>
+          <div className="blueprint-panel modal-content" style={{ padding: '2rem' }}>
+            <div style={{ marginBottom: '1.5rem' }}>
+              <span className="mono-tag tag-brass">[INTERVIEW JUNCTION]</span>
+              <h2 style={{ fontSize: '1.35rem', fontWeight: 800, marginTop: '0.3rem' }}>
+                Confirm Proposed Time Slot
+              </h2>
+            </div>
 
             <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem', marginBottom: '1.5rem' }}>
               {selectedInterview.proposedSlots?.map((slotStr: string, idx: number) => {
@@ -382,24 +363,25 @@ export function CandidateDashboard() {
                     key={idx}
                     style={{
                       padding: '0.85rem 1rem',
-                      borderRadius: '8px',
-                      background: isConfirmed ? 'var(--success-bg)' : 'rgba(255, 255, 255, 0.05)',
-                      border: '1px solid ' + (isConfirmed ? 'rgba(16, 185, 129, 0.4)' : 'var(--border-color)'),
+                      background: isConfirmed ? 'var(--signal-green-bg)' : 'rgba(0,0,0,0.3)',
+                      border: '1px solid ' + (isConfirmed ? 'var(--signal-green)' : 'var(--line-grey)'),
                       display: 'flex',
                       justifyContent: 'space-between',
                       alignItems: 'center',
                     }}
                   >
-                    <span>{dateObj.toLocaleString()}</span>
+                    <span style={{ fontFamily: 'var(--font-mono)', fontSize: '0.85rem' }}>
+                      {dateObj.toLocaleString()}
+                    </span>
                     {isConfirmed ? (
-                      <span className="badge badge-success">Confirmed</span>
+                      <span className="mono-tag tag-green">CONFIRMED</span>
                     ) : (
                       <button
                         type="button"
-                        className="btn btn-primary btn-sm"
+                        className="btn btn-brass btn-sm"
                         onClick={() => handleConfirmSlot(selectedInterview.id, slotStr)}
                       >
-                        Confirm Slot
+                        CONFIRM SLOT
                       </button>
                     )}
                   </div>
@@ -413,7 +395,7 @@ export function CandidateDashboard() {
                 className="btn btn-secondary"
                 onClick={() => setSelectedInterview(null)}
               >
-                Close
+                CLOSE
               </button>
             </div>
           </div>
@@ -423,27 +405,26 @@ export function CandidateDashboard() {
       {/* Offer Modal */}
       {selectedOffer && (
         <div className="modal-overlay">
-          <div className="glass-card modal-content animate-fade-in" style={{ padding: '2rem', maxWidth: '650px' }}>
-            <h2 style={{ fontSize: '1.35rem', fontWeight: 800, color: 'var(--success)', marginBottom: '0.5rem' }}>
-              Job Offer — {selectedOffer.roleTitle}
-            </h2>
-            <p style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', marginBottom: '1rem' }}>
-              Annual Compensation: <strong style={{ color: '#f9fafb' }}>${selectedOffer.salary?.toLocaleString()}</strong> | Start Date: <strong style={{ color: '#f9fafb' }}>{selectedOffer.startDate}</strong>
-            </p>
+          <div className="blueprint-panel modal-content" style={{ padding: '2rem', maxWidth: '650px' }}>
+            <div style={{ marginBottom: '1.5rem' }}>
+              <span className="mono-tag tag-green">[OFFER TERMINUS CLEARED]</span>
+              <h2 style={{ fontSize: '1.4rem', fontWeight: 800, color: 'var(--signal-green)', marginTop: '0.3rem' }}>
+                Official Offer — {selectedOffer.roleTitle}
+              </h2>
+            </div>
 
-            <div style={{ background: 'rgba(0, 0, 0, 0.3)', padding: '1rem', borderRadius: '8px', marginBottom: '1rem' }}>
-              <h4 style={{ fontSize: '0.85rem', fontWeight: 600, color: 'var(--text-secondary)', marginBottom: '0.3rem' }}>
-                BENEFITS SUMMARY:
-              </h4>
-              <p style={{ fontSize: '0.85rem' }}>{selectedOffer.benefitsSummary}</p>
+            <div style={{ background: '#0B131C', padding: '1rem', border: '1px solid var(--line-grey)', marginBottom: '1rem', fontFamily: 'var(--font-mono)', fontSize: '0.8rem' }}>
+              <div>COMPENSATION: <strong>${selectedOffer.salary?.toLocaleString()} / YEAR</strong></div>
+              <div>START DATE: <strong>{selectedOffer.startDate}</strong></div>
+              <div style={{ marginTop: '0.5rem', color: 'var(--fg-muted)' }}>BENEFITS: {selectedOffer.benefitsSummary}</div>
             </div>
 
             {selectedOffer.draftedLetter && (
-              <div className="glass-card-ai" style={{ padding: '1.25rem', borderRadius: '8px', marginBottom: '1.5rem' }}>
-                <h4 style={{ fontSize: '0.85rem', fontWeight: 700, color: 'var(--ai-purple)', marginBottom: '0.5rem', display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
-                  <Sparkles size={16} /> Official Offer Letter Body:
-                </h4>
-                <div style={{ fontSize: '0.85rem', color: 'var(--text-primary)', whiteSpace: 'pre-line', lineHeight: '1.6' }}>
+              <div style={{ background: '#111C27', padding: '1.25rem', border: '1px solid var(--accent-brass)', borderRadius: '2px', marginBottom: '1.5rem' }}>
+                <span className="mono-tag tag-brass" style={{ display: 'inline-block', marginBottom: '0.5rem' }}>
+                  OFFICIAL LETTER BODY:
+                </span>
+                <div style={{ fontSize: '0.85rem', color: 'var(--fg-main)', whiteSpace: 'pre-line', lineHeight: '1.6' }}>
                   {selectedOffer.draftedLetter}
                 </div>
               </div>
@@ -452,52 +433,51 @@ export function CandidateDashboard() {
             {selectedOffer.status === 'issued' ? (
               <div>
                 <div className="form-group">
-                  <label className="form-label">Negotiation / Response Message (Optional)</label>
+                  <label className="form-label">RESPONSE / COUNTER NOTE (OPTIONAL)</label>
                   <textarea
                     className="form-textarea"
                     rows={2}
                     value={candidateResponse}
                     onChange={(e) => setCandidateResponse(e.target.value)}
-                    placeholder="Enter any notes or counter-offer details..."
+                    placeholder="Enter negotiation details or acceptance note..."
                   />
                 </div>
 
                 <div style={{ display: 'flex', gap: '0.75rem', justifyContent: 'flex-end', marginTop: '1rem' }}>
                   <button
                     type="button"
-                    className="btn btn-danger"
+                    className="btn btn-signal-rust"
                     onClick={() => handleOfferResponse(selectedOffer.id, 'rejected')}
                   >
-                    Decline Offer
+                    DECLINE OFFER
                   </button>
                   <button
                     type="button"
                     className="btn btn-secondary"
                     onClick={() => handleOfferResponse(selectedOffer.id, 'negotiating')}
                   >
-                    Negotiate
+                    NEGOTIATE
                   </button>
                   <button
                     type="button"
-                    className="btn btn-primary"
+                    className="btn btn-signal-green"
                     onClick={() => handleOfferResponse(selectedOffer.id, 'accepted')}
-                    style={{ background: 'var(--success)' }}
                   >
-                    Accept Offer
+                    ACCEPT OFFER
                   </button>
                 </div>
               </div>
             ) : (
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                <span className="badge badge-success" style={{ fontSize: '0.9rem' }}>
-                  Status: {selectedOffer.status.toUpperCase()}
+                <span className="mono-tag tag-green">
+                  STATUS: {selectedOffer.status.toUpperCase()}
                 </span>
                 <button
                   type="button"
                   className="btn btn-secondary"
                   onClick={() => setSelectedOffer(null)}
                 >
-                  Close
+                  CLOSE
                 </button>
               </div>
             )}
