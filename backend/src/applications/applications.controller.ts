@@ -56,4 +56,10 @@ export class ApplicationsController {
   bulkTransition(@Body() dto: BulkTransitionDto, @CurrentUser() user: User) {
     return this.applicationsService.bulkTransition(dto.applicationIds, dto.stage, user);
   }
+
+  @Roles(Role.RECRUITER, Role.HIRING_MANAGER, Role.ADMIN)
+  @Post(':id/score')
+  score(@Param('id', ParseUUIDPipe) id: string, @CurrentUser() user: User) {
+    return this.applicationsService.scoreApplication(id, user);
+  }
 }
