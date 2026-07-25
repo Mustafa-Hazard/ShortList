@@ -8,6 +8,7 @@ import { OfferDrafterService } from './offer-drafter.service';
 import { JobsModule } from '../jobs/jobs.module';
 import { ApplicationsModule } from '../applications/applications.module';
 import { AiProxyModule } from '../ai-proxy/ai-proxy.module';
+import { NotificationsModule } from '../notifications/notifications.module';
 
 @Module({
   imports: [
@@ -15,6 +16,7 @@ import { AiProxyModule } from '../ai-proxy/ai-proxy.module';
     JobsModule,
     ApplicationsModule,
     AiProxyModule,
+    NotificationsModule,
   ],
   controllers: [OffersController],
   providers: [OffersService, OfferDrafterService],

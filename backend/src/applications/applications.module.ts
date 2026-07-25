@@ -6,12 +6,14 @@ import { ApplicationsController } from './applications.controller';
 import { CvScorerService } from './cv-scorer.service';
 import { JobsModule } from '../jobs/jobs.module';
 import { AiProxyModule } from '../ai-proxy/ai-proxy.module';
+import { NotificationsModule } from '../notifications/notifications.module';
 
 @Module({
   imports: [
     TypeOrmModule.forFeature([Application]),
     JobsModule,
     AiProxyModule,
+    NotificationsModule,
   ],
   controllers: [ApplicationsController],
   providers: [ApplicationsService, CvScorerService],

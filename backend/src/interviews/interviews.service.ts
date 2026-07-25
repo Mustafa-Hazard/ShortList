@@ -14,6 +14,8 @@ import { InterviewStatus } from '../common/enums/interview.enum';
 import { JobsService } from '../jobs/jobs.service';
 import { ApplicationsService } from '../applications/applications.service';
 import { QuestionSuggesterService } from './question-suggester.service';
+import { NotificationsService } from '../notifications/notifications.service';
+import { NotificationType } from '../notifications/notification.entity';
 import { ScheduleInterviewDto } from './dto/schedule-interview.dto';
 import { ConfirmSlotDto } from './dto/confirm-slot.dto';
 import { UpdateInterviewStatusDto } from './dto/update-interview-status.dto';
@@ -28,6 +30,7 @@ export class InterviewsService {
     private jobsService: JobsService,
     private applicationsService: ApplicationsService,
     private questionSuggesterService: QuestionSuggesterService,
+    private notificationsService: NotificationsService,
   ) {}
 
   async schedule(dto: ScheduleInterviewDto, user: User): Promise<Interview> {
@@ -49,7 +52,24 @@ export class InterviewsService {
       questions: [],
     });
 
-    return this.interviewsRepo.save(interview);
+    const saved = await this.interviewsRepo.save(interview);
+
+    try {
+      await this.notificationsService.createAndSend(
+        application.candidateId,
+        NotificationType.INTERVIEW_PROPOSED,
+        {
+          interviewId: saved.id,
+          applicationId: saved.applicationId,
+          type: saved.type,
+          proposedSlots: saved.proposedSlots,
+        },
+      );
+    } catch (err) {
+      // Degrade-don't-block
+    }
+
+    return saved;
   }
 
   async confirmSlot(
@@ -82,7 +102,25 @@ export class InterviewsService {
 
     interview.confirmedSlot = confirmedDate;
     interview.status = InterviewStatus.CONFIRMED;
-    return this.interviewsRepo.save(interview);
+    const saved = await this.interviewsRepo.save(interview);
+
+    if (interview.proposedById) {
+      try {
+        await this.notificationsService.createAndSend(
+          interview.proposedById,
+          NotificationType.INTERVIEW_CONFIRMED,
+          {
+            interviewId: saved.id,
+            applicationId: saved.applicationId,
+            confirmedSlot: confirmedDate,
+          },
+        );
+      } catch (err) {
+        // Degrade-don't-block
+      }
+    }
+
+    return saved;
   }
 
   async updateStatus(
