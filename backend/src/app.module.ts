@@ -8,6 +8,7 @@ import { CompaniesModule } from './companies/companies.module';
 import { JobsModule } from './jobs/jobs.module';
 import { ApplicationsModule } from './applications/applications.module';
 import { CvModule } from './cv/cv.module';
+import { InterviewsModule } from './interviews/interviews.module';
 import { JwtAuthGuard } from './common/guards/jwt-auth.guard';
 import { RolesGuard } from './common/guards/roles.guard';
 
@@ -21,8 +22,7 @@ import { RolesGuard } from './common/guards/roles.guard';
     JobsModule,
     ApplicationsModule,
     CvModule,
-    // Feature modules (jobs, applications, cv, interviews, offers, ai,
-    // notifications) are added here as each is built — see docs/BUILD_LOG.md.
+    InterviewsModule,
   ],
   providers: [
     // Every route requires a valid JWT by default (opt out with @Public()),
