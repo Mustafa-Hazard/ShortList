@@ -5,6 +5,7 @@ import { DatabaseModule } from './config/database.module';
 import { AuthModule } from './auth/auth.module';
 import { UsersModule } from './users/users.module';
 import { CompaniesModule } from './companies/companies.module';
+import { JobsModule } from './jobs/jobs.module';
 import { JwtAuthGuard } from './common/guards/jwt-auth.guard';
 import { RolesGuard } from './common/guards/roles.guard';
 
@@ -15,6 +16,7 @@ import { RolesGuard } from './common/guards/roles.guard';
     AuthModule,
     UsersModule,
     CompaniesModule,
+    JobsModule,
     // Feature modules (jobs, applications, cv, interviews, offers, ai,
     // notifications) are added here as each is built — see docs/BUILD_LOG.md.
   ],
