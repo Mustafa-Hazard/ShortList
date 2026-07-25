@@ -28,6 +28,7 @@ describe('JobsController', () => {
             update: jest.fn(),
             remove: jest.fn(),
             transition: jest.fn(),
+            generateDescription: jest.fn(),
             stats: jest.fn(),
           },
         },
@@ -89,6 +90,14 @@ describe('JobsController', () => {
     expect(service.transition).toHaveBeenCalledWith(
       'posting-1',
       JobStatus.ARCHIVED,
+      recruiter,
+    );
+  });
+
+  it('generateDescription delegates to service.generateDescription with id and current user', async () => {
+    await controller.generateDescription('posting-1', recruiter);
+    expect(service.generateDescription).toHaveBeenCalledWith(
+      'posting-1',
       recruiter,
     );
   });

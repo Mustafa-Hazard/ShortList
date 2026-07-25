@@ -4,11 +4,16 @@ import { JobPosting } from './job-posting.entity';
 import { Application } from '../applications/application.entity';
 import { JobsService } from './jobs.service';
 import { JobsController } from './jobs.controller';
+import { JdGeneratorService } from './jd-generator.service';
+import { AiProxyModule } from '../ai-proxy/ai-proxy.module';
 
 @Module({
-  imports: [TypeOrmModule.forFeature([JobPosting, Application])],
+  imports: [
+    TypeOrmModule.forFeature([JobPosting, Application]),
+    AiProxyModule,
+  ],
   controllers: [JobsController],
-  providers: [JobsService],
-  exports: [JobsService],
+  providers: [JobsService, JdGeneratorService],
+  exports: [JobsService, JdGeneratorService],
 })
 export class JobsModule {}

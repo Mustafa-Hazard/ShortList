@@ -8,6 +8,7 @@ import {
 import { JobsService } from './jobs.service';
 import { JobPosting } from './job-posting.entity';
 import { Application } from '../applications/application.entity';
+import { JdGeneratorService } from './jd-generator.service';
 import { JobStatus, JobType } from '../common/enums/job.enum';
 import { ApplicationStage } from '../common/enums/application-stage.enum';
 import { Role } from '../common/enums/role.enum';
@@ -17,6 +18,7 @@ describe('JobsService', () => {
   let service: JobsService;
   let jobPostingsRepo: jest.Mocked<any>;
   let applicationsRepo: jest.Mocked<any>;
+  let jdGeneratorService: jest.Mocked<JdGeneratorService>;
 
   const recruiter: User = {
     id: 'user-1',
@@ -91,17 +93,82 @@ describe('JobsService', () => {
             createQueryBuilder: jest.fn(() => queryBuilderMock),
           },
         },
+        {
+          provide: JdGeneratorService,
+          useValue: {
+            generateDescription: jest.fn(),
+          },
+        },
       ],
     }).compile();
 
     service = module.get(JobsService);
     jobPostingsRepo = module.get(getRepositoryToken(JobPosting));
     applicationsRepo = module.get(getRepositoryToken(Application));
+    jdGeneratorService = module.get(JdGeneratorService);
     (applicationsRepo as any).__queryBuilderMock = queryBuilderMock;
   });
 
   describe('create', () => {
-    it('creates a draft posting scoped to the recruiter company', async () => {
+    it('creates a draft posting with auto-generated description when description is omitted', async () => {
+      jdGeneratorService.generateDescription.mockResolvedValue('AI Description');
+      jobPostingsRepo.create.mockReturnValue(basePosting);
+      jobPostingsRepo.save.mockResolvedValue(basePosting);
+
+      const dto = {
+        title: 'Backend Engineer',
+        department: 'Engineering',
+        type: JobType.FULL_TIME,
+        requiredSkills: ['NestJS'],
+        responsibilities: 'Build things',
+      };
+
+      const result = await service.create(dto as any, recruiter);
+
+      expect(jdGeneratorService.generateDescription).toHaveBeenCalledWith(
+        expect.objectContaining({
+          title: 'Backend Engineer',
+          department: 'Engineering',
+        }),
+      );
+      expect(jobPostingsRepo.create).toHaveBeenCalledWith(
+        expect.objectContaining({
+          companyId: 'company-1',
+          createdById: 'user-1',
+          description: 'AI Description',
+          status: JobStatus.DRAFT,
+        }),
+      );
+      expect(result).toBe(basePosting);
+    });
+
+    it('uses provided description and bypasses AI generator when description is supplied', async () => {
+      jobPostingsRepo.create.mockReturnValue(basePosting);
+      jobPostingsRepo.save.mockResolvedValue(basePosting);
+
+      const dto = {
+        title: 'Backend Engineer',
+        department: 'Engineering',
+        type: JobType.FULL_TIME,
+        requiredSkills: ['NestJS'],
+        responsibilities: 'Build things',
+        description: 'Manual JD text',
+      };
+
+      await service.create(dto as any, recruiter);
+
+      expect(jdGeneratorService.generateDescription).not.toHaveBeenCalled();
+      expect(jobPostingsRepo.create).toHaveBeenCalledWith(
+        expect.objectContaining({
+          description: 'Manual JD text',
+        }),
+      );
+    });
+
+    it('degrades gracefully and creates posting with null description if AI generation throws error', async () => {
+      jdGeneratorService.generateDescription.mockRejectedValue(
+        new Error('AI Proxy rate limit'),
+      );
       jobPostingsRepo.create.mockReturnValue(basePosting);
       jobPostingsRepo.save.mockResolvedValue(basePosting);
 
@@ -117,9 +184,7 @@ describe('JobsService', () => {
 
       expect(jobPostingsRepo.create).toHaveBeenCalledWith(
         expect.objectContaining({
-          companyId: 'company-1',
-          createdById: 'user-1',
-          status: JobStatus.DRAFT,
+          description: null,
         }),
       );
       expect(result).toBe(basePosting);
@@ -129,6 +194,38 @@ describe('JobsService', () => {
       await expect(
         service.create({} as any, candidate),
       ).rejects.toThrow(BadRequestException);
+    });
+  });
+
+  describe('generateDescription', () => {
+    it('generates description and updates the job posting', async () => {
+      jobPostingsRepo.findOne.mockResolvedValue({ ...basePosting });
+      jdGeneratorService.generateDescription.mockResolvedValue('Regenerated JD');
+      jobPostingsRepo.save.mockImplementation((p: any) => Promise.resolve(p));
+
+      const result = await service.generateDescription('posting-1', recruiter);
+
+      expect(jdGeneratorService.generateDescription).toHaveBeenCalled();
+      expect(result.description).toBe('Regenerated JD');
+    });
+
+    it('fails loudly when AI generation throws an error', async () => {
+      jobPostingsRepo.findOne.mockResolvedValue({ ...basePosting });
+      jdGeneratorService.generateDescription.mockRejectedValue(
+        new Error('AI proxy error'),
+      );
+
+      await expect(
+        service.generateDescription('posting-1', recruiter),
+      ).rejects.toThrow('AI proxy error');
+    });
+
+    it('forbids generating description for posting owned by another company', async () => {
+      jobPostingsRepo.findOne.mockResolvedValue(basePosting);
+
+      await expect(
+        service.generateDescription('posting-1', otherCompanyRecruiter),
+      ).rejects.toThrow(ForbiddenException);
     });
   });
 
