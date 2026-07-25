@@ -61,21 +61,17 @@
 
 ---
 
-## 2. What's Left — Priority Order
+## 2. Priority Status — ALL COMPLETED (100%)
 
-1. **Wire `JdGeneratorService` into the Jobs module** (this session left off here — see the exact task spec in §6, "Antigravity prompt for the next task")
-   - Auto-generate `description` on `create()` if blank, degrade-don't-block on AI failure
-   - New `POST /jobs/:id/generate-description` endpoint for explicit regeneration (fails loudly — recruiter explicitly asked)
-   - Update `jobs.service.spec.ts` / `jobs.controller.spec.ts` for both paths
-   - Branch, commit, PR, merge (same flow as CV/AI Proxy modules)
-2. **AI Feature 2 (CV Screening & Scorer)** — depends on CV module (done) + AI proxy (done); populates `Application.aiScore`/`aiExtraction`/`aiStrengths`/`aiGaps`, which the Applications module already sorts by. Follow the same "own the prompt, share the proxy" pattern as JD Generator.
-3. **Interview Scheduler + AI Feature 3 (Question Suggester)**
-4. **Offers module + AI Feature 4 (Offer Letter Drafter, bonus)**
-5. **WebSocket notification gateway** — emits on every pipeline stage transition
-6. **Frontend: auth pages + role-based routing**
-7. **Frontend: role dashboards + AI-powered components**
-8. **Admin analytics dashboard** (4+ chart types)
-9. **Remaining deliverables**: ER diagram, full API contract doc, AI integration report (prompt templates, ≥2 documented iterations w/ rationale per AI feature — JD Generator's iteration log is already written as a code comment in `jd-generator.service.ts`, reuse that pattern), data privacy paragraph
+1. **Wire `JdGeneratorService` into Jobs module** — ✅ COMPLETED (PR #5)
+2. **AI Feature 2 (CV Screening & Scorer)** — ✅ COMPLETED (PR #6)
+3. **Interview Scheduler + AI Feature 3 (Question Suggester)** — ✅ COMPLETED (PR #7)
+4. **Offers module + AI Feature 4 (Offer Letter Drafter)** — ✅ COMPLETED (PR #8)
+5. **WebSocket notification gateway** — ✅ COMPLETED (PR #9)
+6. **Frontend: auth pages + role-based routing** — ✅ COMPLETED (PR #10)
+7. **Frontend: role dashboards + AI-powered components** — ✅ COMPLETED (PR #10)
+8. **Admin analytics dashboard** — ✅ COMPLETED (PR #10 & #11)
+9. **Remaining deliverables** (ER diagram, full API contract doc, AI integration report, data privacy) — ✅ COMPLETED (`docs/ER_DIAGRAM.md`, `docs/API_CONTRACT.md`, `docs/AI_INTEGRATION_REPORT.md`, `docs/DATA_PRIVACY.md`)
 
 **Grading-relevant, don't lose sight of:** ≥60% controller test coverage (comfortably clear on all 4 shipped modules), Jest+Supertest on every role-protected route, Swagger accuracy, at least one AI feature with real fallback/degradation behavior (CV module + now the AI Proxy module itself both satisfy this — reuse the same pattern for JD Generator and CV Scorer), zero API keys in frontend code.
 
