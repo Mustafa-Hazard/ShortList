@@ -79,6 +79,15 @@ export class JobsController {
     return this.jobsService.transition(id, JobStatus.ARCHIVED, user);
   }
 
+  @Roles(Role.RECRUITER, Role.ADMIN)
+  @Post(':id/generate-description')
+  generateDescription(
+    @Param('id', ParseUUIDPipe) id: string,
+    @CurrentUser() user: User,
+  ) {
+    return this.jobsService.generateDescription(id, user);
+  }
+
   @Roles(Role.RECRUITER, Role.HIRING_MANAGER, Role.ADMIN)
   @Get(':id/stats')
   stats(@Param('id', ParseUUIDPipe) id: string, @CurrentUser() user: User) {
