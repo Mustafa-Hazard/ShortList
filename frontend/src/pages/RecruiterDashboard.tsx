@@ -94,6 +94,7 @@ export function RecruiterDashboard() {
         department,
         type: jobType,
         requiredSkills: skillsArray,
+        responsibilities: jobDescription ? jobDescription.substring(0, 120) : 'Core engineering responsibilities',
         description: jobDescription,
         salaryMin: Number(salaryMin),
         salaryMax: Number(salaryMax),
@@ -378,12 +379,32 @@ export function RecruiterDashboard() {
                 <h3 style={{ fontSize: '1.15rem', fontWeight: 700 }}>{job.title}</h3>
                 <span className="mono-tag tag-brass">{job.status.toUpperCase()}</span>
               </div>
-              <p style={{ fontSize: '0.8rem', color: 'var(--fg-muted)', marginTop: '0.3rem', fontFamily: 'var(--font-mono)' }}>
-                DEPT: {job.department.toUpperCase()} | ${job.salaryMin?.toLocaleString()} - ${job.salaryMax?.toLocaleString()}
-              </p>
-              <p style={{ fontSize: '0.85rem', color: 'var(--fg-muted)', marginTop: '1rem', lineClamp: 4, WebkitLineClamp: 4, display: '-webkit-box', WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>
-                {job.description}
-              </p>
+              <div style={{ marginTop: '0.75rem' }}>
+                <span style={{ fontSize: '0.7rem', fontWeight: 600, color: 'var(--fg-dim)', fontFamily: 'var(--font-mono)', display: 'block', marginBottom: '0.3rem' }}>
+                  REQUIRED SKILLS:
+                </span>
+                <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.35rem' }}>
+                  {(Array.isArray(job.requiredSkills)
+                    ? job.requiredSkills
+                    : typeof job.requiredSkills === 'string'
+                    ? job.requiredSkills.split(/[,;\s]+/).filter(Boolean)
+                    : []
+                  ).map((skill: string, idx: number) => (
+                    <span key={idx} className="mono-tag" style={{ fontSize: '0.68rem' }}>
+                      {skill}
+                    </span>
+                  ))}
+                </div>
+              </div>
+
+              <div style={{ marginTop: '0.75rem' }}>
+                <span style={{ fontSize: '0.7rem', fontWeight: 600, color: 'var(--fg-dim)', fontFamily: 'var(--font-mono)', display: 'block', marginBottom: '0.3rem' }}>
+                  RESPONSIBILITIES & DESCRIPTION:
+                </span>
+                <p style={{ fontSize: '0.85rem', color: 'var(--fg-muted)', lineClamp: 4, WebkitLineClamp: 4, display: '-webkit-box', WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>
+                  {job.responsibilities ? `${job.responsibilities} — ` : ''}{job.description}
+                </p>
+              </div>
             </div>
           ))}
         </div>

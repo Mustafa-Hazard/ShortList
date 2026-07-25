@@ -41,9 +41,10 @@ export class CreateJobPostingDto {
   @IsString({ each: true })
   requiredSkills: string[];
 
-  @ApiProperty()
+  @ApiPropertyOptional()
+  @IsOptional()
   @IsString()
-  responsibilities: string;
+  responsibilities?: string;
 
   @ApiPropertyOptional()
   @IsOptional()
