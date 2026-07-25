@@ -15,6 +15,7 @@ import { User } from '../users/user.entity';
 import { CreateJobPostingDto } from './dto/create-job-posting.dto';
 import { UpdateJobPostingDto } from './dto/update-job-posting.dto';
 import { JobPostingQueryDto } from './dto/job-posting-query.dto';
+import { JdGeneratorService } from './jd-generator.service';
 
 // Linear forward-only lifecycle: Draft -> Published -> Closed -> Archived.
 // No reopening a closed posting and no skipping stages — each is its own
@@ -35,6 +36,7 @@ export class JobsService {
     private jobPostingsRepo: Repository<JobPosting>,
     @InjectRepository(Application)
     private applicationsRepo: Repository<Application>,
+    private jdGeneratorService: JdGeneratorService,
   ) {}
 
   async create(dto: CreateJobPostingDto, user: User): Promise<JobPosting> {
@@ -43,12 +45,50 @@ export class JobsService {
         'User is not associated with a company and cannot create job postings',
       );
     }
+
+    let description = dto.description;
+    if (!description || description.trim() === '') {
+      try {
+        description = await this.jdGeneratorService.generateDescription({
+          title: dto.title,
+          department: dto.department,
+          type: dto.type,
+          salaryMin: dto.salaryMin ?? null,
+          salaryMax: dto.salaryMax ?? null,
+          requiredSkills: dto.requiredSkills,
+          responsibilities: dto.responsibilities,
+          cultureNotes: dto.cultureNotes ?? null,
+        });
+      } catch (error) {
+        // Degrade-don't-block: If AI proxy fails during auto-generation,
+        // fall back gracefully so job creation succeeds.
+        description = dto.description ?? null;
+      }
+    }
+
     const posting = this.jobPostingsRepo.create({
       ...dto,
+      description,
       companyId: user.companyId,
       createdById: user.id,
       status: JobStatus.DRAFT,
     });
+    return this.jobPostingsRepo.save(posting);
+  }
+
+  async generateDescription(id: string, user: User): Promise<JobPosting> {
+    const posting = await this.getOwnedForStaff(id, user);
+    const description = await this.jdGeneratorService.generateDescription({
+      title: posting.title,
+      department: posting.department,
+      type: posting.type,
+      salaryMin: posting.salaryMin ?? null,
+      salaryMax: posting.salaryMax ?? null,
+      requiredSkills: posting.requiredSkills,
+      responsibilities: posting.responsibilities,
+      cultureNotes: posting.cultureNotes ?? null,
+    });
+    posting.description = description;
     return this.jobPostingsRepo.save(posting);
   }
 
