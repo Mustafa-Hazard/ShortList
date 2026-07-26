@@ -1,6 +1,6 @@
-# TalentBridge — Data Privacy & AI Ethics Compliance
+# CogniHire — Data Privacy & AI Ethics Compliance
 
-This document outlines the data protection architecture, candidate PII safeguards, and AI ethics commitments enforced across the TalentBridge platform.
+This document outlines the data protection architecture, candidate PII safeguards, and AI ethics commitments enforced across the CogniHire platform.
 
 ---
 

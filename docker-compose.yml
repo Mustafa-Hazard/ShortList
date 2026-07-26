@@ -3,18 +3,18 @@ version: "3.9"
 services:
   db:
     image: postgres:15-alpine
-    container_name: talentbridge-db
+    container_name: cognihire-db
     restart: unless-stopped
     environment:
-      POSTGRES_USER: talentbridge
-      POSTGRES_PASSWORD: talentbridge
-      POSTGRES_DB: talentbridge
+      POSTGRES_USER: cognihire
+      POSTGRES_PASSWORD: cognihire
+      POSTGRES_DB: cognihire
     ports:
       - "5432:5432"
     volumes:
-      - talentbridge-db-data:/var/lib/postgresql/data
+      - cognihire-db-data:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U talentbridge"]
+      test: ["CMD-SHELL", "pg_isready -U cognihire"]
       interval: 5s
       timeout: 5s
       retries: 10
@@ -23,7 +23,7 @@ services:
     build:
       context: ./backend
       dockerfile: Dockerfile
-    container_name: talentbridge-backend
+    container_name: cognihire-backend
     restart: unless-stopped
     depends_on:
       db:
@@ -33,13 +33,13 @@ services:
     environment:
       DB_HOST: db
       DB_PORT: 5432
-      DB_USERNAME: talentbridge
-      DB_PASSWORD: talentbridge
-      DB_NAME: talentbridge
+      DB_USERNAME: cognihire
+      DB_PASSWORD: cognihire
+      DB_NAME: cognihire
     ports:
       - "3000:3000"
     command: >
       sh -c "npm run migration:run && npm run start:prod"
 
 volumes:
-  talentbridge-db-data:
+  cognihire-db-data:

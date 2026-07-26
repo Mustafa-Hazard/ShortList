@@ -1,10 +1,10 @@
 <div align="center">
 
-# 🌉 TalentBridge
+# 🧠 CogniHire
 
-### *Next-Generation AI-Augmented SME Recruitment Platform*
+### *Next-Generation AI-Augmented SME Recruitment Engine*
 
-[![Build & Tests](https://img.shields.io/badge/Build%20%26%20Tests-100%25%20Passing-brightgreen?style=for-the-badge&logo=github-actions)](https://github.com/Mustafa-Hazard/TalentBridge)
+[![Build & Tests](https://img.shields.io/badge/Build%20%26%20Tests-100%25%20Passing-brightgreen?style=for-the-badge&logo=github-actions)](https://github.com/Mustafa-Hazard/CogniHire)
 [![NestJS](https://img.shields.io/badge/Backend-NestJS%20v10-E0234E?style=for-the-badge&logo=nestjs)](https://nestjs.com/)
 [![React](https://img.shields.io/badge/Frontend-React%20v18%20%2B%20Vite-61DAFB?style=for-the-badge&logo=react)](https://react.dev/)
 [![TypeScript](https://img.shields.io/badge/Language-TypeScript%20v5-3178C6?style=for-the-badge&logo=typescript)](https://www.typescriptlang.org/)
@@ -28,9 +28,9 @@
 
 ## 📖 Overview
 
-**TalentBridge** is a modern, full-stack recruitment platform engineered specifically to solve the slowest bottlenecks in SME (Small and Medium Enterprise) hiring. 
+**CogniHire** is an intelligent, full-stack recruitment platform engineered specifically to eliminate the slowest bottlenecks in SME (Small and Medium Enterprise) hiring.
 
-In traditional SME recruitment, HR teams waste dozens of hours writing job listings, manually reading CVs, preparing generic interview questions, and drafting offer letters. **TalentBridge automates these tasks with an integrated Google Gemini 1.5 Flash AI Engine**, while enforcing a strict **multi-tenant role-based pipeline**, real-time **WebSocket updates**, and complete **data privacy compliance**.
+In traditional SME recruitment, HR teams waste dozens of hours writing job listings, manually reading CVs, preparing generic interview questions, and drafting offer letters. **CogniHire automates these tasks with an integrated Google Gemini 1.5 Flash AI Engine**, while enforcing a strict **multi-tenant role-based pipeline**, real-time **WebSocket updates**, and complete **data privacy compliance**.
 
 ---
 
@@ -38,7 +38,7 @@ In traditional SME recruitment, HR teams waste dozens of hours writing job listi
 
 ```
                       ┌──────────────────────────────────────────────┐
-                      │    TalentBridge Recruitment Lifecycle        │
+                      │       CogniHire Recruitment Lifecycle        │
                       └──────────────────────┬───────────────────────┘
                                              │
       ┌──────────────────┬───────────────────┼───────────────────┬──────────────────┐
@@ -55,7 +55,7 @@ In traditional SME recruitment, HR teams waste dozens of hours writing job listi
 
 ### 🤖 1. AI-Augmented HR Workflows (Google Gemini 1.5 Flash)
 - 📝 **AI Job Description Generator:** Generates structured, bias-free job descriptions containing role summaries, key responsibilities, and skill requirements from minimal inputs.
-- 🎯 **CV Parser & Match Scorer (0–100):** Extracts plain text from candidate CV PDFs using `pdf-parse` and evaluates skill fit against job criteria, producing a score, strengths, and identified skill gaps.
+- 🎯 **CV Parser & Match Scorer (0–100):** Extracts plain text from candidate CV PDFs using `pdf-parse` and evaluates skill fit against job criteria, producing an objective score, candidate strengths, and identified skill gaps.
 - 💡 **Tailored Interview Question Suggester:** Generates candidate-specific technical, behavioral, and system design questions targeting candidate skill gaps, complete with *"what to listen for"* evaluation signals.
 - ✉️ **Automated Offer Letter Drafter:** Drafts personalized, formal job offer letters incorporating candidate names, salaries, start dates, and benefits.
 
@@ -70,7 +70,7 @@ In traditional SME recruitment, HR teams waste dozens of hours writing job listi
 
 ## 🧠 AI Engine Architecture
 
-TalentBridge encapsulates all LLM interactions inside a decoupled `AiProxyModule` using a zero-lock-in `AiProvider` interface:
+CogniHire encapsulates all LLM interactions inside a decoupled `AiProxyModule` using a zero-lock-in `AiProvider` interface:
 
 ```text
                ┌───────────────────────────────────────────────────┐
@@ -103,7 +103,7 @@ TalentBridge encapsulates all LLM interactions inside a decoupled `AiProxyModule
 ## 🏗️ System Architecture & Monorepo Layout
 
 ```text
-talentbridge/
+cognihire/
 ├── backend/                      # NestJS v10 REST & WebSocket API Engine
 │   ├── src/
 │   │   ├── ai-proxy/             # Gemini 1.5 LLM Integration & Provider Proxy
@@ -166,8 +166,8 @@ talentbridge/
 
 ```bash
 # 1. Clone the repository
-git clone https://github.com/Mustafa-Hazard/TalentBridge.git
-cd TalentBridge
+git clone https://github.com/Mustafa-Hazard/CogniHire.git
+cd CogniHire
 
 # 2. Configure Backend Environment
 cp backend/.env.example backend/.env
@@ -189,10 +189,10 @@ npm run dev
 ```bash
 # 1. Start Local PostgreSQL Service & Create Database
 sudo service postgresql start
-sudo -u postgres psql -c "CREATE DATABASE talentbridge;"
-sudo -u postgres psql -c "CREATE USER talentbridge WITH PASSWORD 'talentbridge';"
-sudo -u postgres psql -c "GRANT ALL PRIVILEGES ON DATABASE talentbridge TO talentbridge;"
-sudo -u postgres psql -d talentbridge -c "GRANT ALL ON SCHEMA public TO talentbridge;"
+sudo -u postgres psql -c "CREATE DATABASE cognihire;"
+sudo -u postgres psql -c "CREATE USER cognihire WITH PASSWORD 'cognihire';"
+sudo -u postgres psql -c "GRANT ALL PRIVILEGES ON DATABASE cognihire TO cognihire;"
+sudo -u postgres psql -d cognihire -c "GRANT ALL ON SCHEMA public TO cognihire;"
 
 # 2. Start Backend
 cd backend
@@ -215,7 +215,7 @@ The application will be running at:
 
 ## 🧪 Testing & Quality Assurance
 
-TalentBridge features comprehensive unit, controller, and E2E test suites with 100% pass rates:
+CogniHire features comprehensive unit, controller, and E2E test suites with 100% pass rates:
 
 ```bash
 # Run backend unit & integration tests (145 passing tests)

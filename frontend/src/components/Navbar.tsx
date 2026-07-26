@@ -114,9 +114,9 @@ export function Navbar() {
                 fontSize: '0.75rem',
               }}
             >
-              [TB-01]
+              [CH-01]
             </div>
-            TALENTBRIDGE
+            COGNIHIRE
           </Link>
 
           {user && (

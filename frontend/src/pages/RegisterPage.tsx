@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { User, Briefcase, UserPlus } from 'lucide-react';
 import { useAuthStore } from '../store/useAuthStore';
+import { apiClient } from '../api/client';
 
 export function RegisterPage() {
   const [accountType, setAccountType] = useState<'candidate' | 'recruiter' | 'hiring_manager' | 'admin'>('candidate');
@@ -29,7 +30,7 @@ export function RegisterPage() {
           firstName,
           lastName,
           role: accountType,
-          companyName: accountType !== 'candidate' ? (companyName || 'Acme Corp') : undefined,
+          companyName: companyName || 'Acme Corp',
         });
         useAuthStore.setState({ user: res.data.user, token: res.data.accessToken });
         localStorage.setItem('token', res.data.accessToken);
@@ -70,7 +71,7 @@ export function RegisterPage() {
           <div style={{ marginBottom: '1.5rem' }}>
             <h2 style={{ fontSize: '1.5rem', fontWeight: 800 }}>Account Registration</h2>
             <p style={{ color: 'var(--fg-muted)', fontSize: '0.8125rem', marginTop: '0.2rem' }}>
-              Register account access to TalentBridge transit line
+              Register account access to CogniHire transit line
             </p>
           </div>
 

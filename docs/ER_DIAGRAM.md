@@ -1,6 +1,6 @@
-# TalentBridge — Entity Relationship (ER) Diagram
+# CogniHire — Entity Relationship (ER) Diagram
 
-This document contains the relational database schema diagram and entity specifications for the TalentBridge recruitment platform.
+This document contains the relational database schema diagram and entity specifications for the CogniHire recruitment platform.
 
 ```mermaid
 erDiagram
