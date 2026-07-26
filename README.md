@@ -1,27 +1,26 @@
-# 🌉 TalentBridge
-
 <div align="center">
 
-![TalentBridge Banner](https://img.shields.io/badge/TalentBridge-AI--Augmented%20Recruitment-indigo?style=for-the-badge&logo=rocket)
+# 🌉 TalentBridge
 
-**Next-Generation AI-Augmented SME Recruitment Platform**
+### *Next-Generation AI-Augmented SME Recruitment Platform*
 
-[![NestJS](https://img.shields.io/badge/Backend-NestJS%20v10-E0234E?style=flat-square&logo=nestjs)](https://nestjs.com/)
-[![React](https://img.shields.io/badge/Frontend-React%20v18%20%2B%20TypeScript-61DAFB?style=flat-square&logo=react)](https://react.dev/)
-[![Vite](https://img.shields.io/badge/Bundler-Vite%20v6-646CFF?style=flat-square&logo=vite)](https://vitejs.dev/)
-[![TypeORM](https://img.shields.io/badge/ORM-TypeORM%20v1.0-FE0803?style=flat-square&logo=typeorm)](https://typeorm.io/)
-[![PostgreSQL](https://img.shields.io/badge/Database-PostgreSQL%2015-4169E1?style=flat-square&logo=postgresql)](https://www.postgresql.org/)
-[![Google Gemini API](https://img.shields.io/badge/AI-Google%20Gemini%201.5%20Flash-4285F4?style=flat-square&logo=google-gemini)](https://ai.google.dev/)
-[![Socket.io](https://img.shields.io/badge/RealTime-Socket.io-010101?style=flat-square&logo=socketdotio)](https://socket.io/)
-[![Docker](https://img.shields.io/badge/Container-Docker%20Compose-2496ED?style=flat-square&logo=docker)](https://www.docker.com/)
+[![Build & Tests](https://img.shields.io/badge/Build%20%26%20Tests-100%25%20Passing-brightgreen?style=for-the-badge&logo=github-actions)](https://github.com/Mustafa-Hazard/TalentBridge)
+[![NestJS](https://img.shields.io/badge/Backend-NestJS%20v10-E0234E?style=for-the-badge&logo=nestjs)](https://nestjs.com/)
+[![React](https://img.shields.io/badge/Frontend-React%20v18%20%2B%20Vite-61DAFB?style=for-the-badge&logo=react)](https://react.dev/)
+[![TypeScript](https://img.shields.io/badge/Language-TypeScript%20v5-3178C6?style=for-the-badge&logo=typescript)](https://www.typescriptlang.org/)
+[![Google Gemini API](https://img.shields.io/badge/AI-Google%20Gemini%201.5%20Flash-4285F4?style=for-the-badge&logo=google-gemini)](https://ai.google.dev/)
+[![PostgreSQL](https://img.shields.io/badge/Database-PostgreSQL%2015-4169E1?style=for-the-badge&logo=postgresql)](https://www.postgresql.org/)
+[![Socket.io](https://img.shields.io/badge/RealTime-Socket.io-010101?style=for-the-badge&logo=socketdotio)](https://socket.io/)
+[![Docker](https://img.shields.io/badge/Containers-Docker%20Compose-2496ED?style=for-the-badge&logo=docker)](https://www.docker.com/)
 
+[Overview](#-overview) •
 [Key Features](#-key-features) •
-[Architecture](#-architecture--monorepo-structure) •
-[Tech Stack](#-tech-stack) •
-[AI Engine](#-ai-layer--prompt-engineering) •
+[AI Engine Architecture](#-ai-engine-architecture) •
+[System Architecture](#-system-architecture--monorepo-layout) •
+[RBAC Matrix](#-role-based-access-control-rbac-matrix) •
 [Getting Started](#-getting-started) •
 [API & Swagger](#-api-documentation--swagger) •
-[Docs Index](#-project-documentation)
+[Documentation Vault](#-documentation-vault)
 
 </div>
 
@@ -29,141 +28,128 @@
 
 ## 📖 Overview
 
-**TalentBridge** is a full-stack, enterprise-grade hiring platform designed specifically for Small and Medium Enterprises (SMEs). Hiring in SMEs is often slowed down by manual resume screening, generic interview prep, and disjointed offer letter drafting. 
+**TalentBridge** is a modern, full-stack recruitment platform engineered specifically to solve the slowest bottlenecks in SME (Small and Medium Enterprise) hiring. 
 
-TalentBridge accelerates and standardizes every phase of the hiring lifecycle using an **AI-augmented pipeline**, robust **Role-Based Access Control (RBAC)**, and **real-time WebSocket updates** — while ensuring human-in-the-loop auditability and data privacy.
-
----
-
-## ✨ Key Features
-
-### 🤖 1. AI-Powered Recruitment Engine
-- **AI Job Description Generator:** Automatically crafts structured, inclusive, and role-tailored job descriptions from minimal inputs (Title, Department, Skills).
-- **CV Parser & Match Scorer:** Server-side PDF parsing (`pdf-parse`) and LLM evaluation producing an objective score (0–100), key candidate extractions, candidate strengths, and identified skill gaps.
-- **Tailored Interview Question Suggester:** Generates domain-specific technical, behavioral, and system design interview questions directly targeting each candidate's identified skill gaps, complete with "what to listen for" candidate evaluation signals.
-- **Automated Offer Letter Drafter:** Drafts personalized, compliant, and professional job offer letters incorporating candidate-specific details, role titles, start dates, and compensation packages.
-
-### 👥 2. Enterprise Governance & Multi-Tenant Pipeline
-- **Role-Guarded Portals:** Tailored user interfaces and strict API guards (`JwtAuthGuard`, `RolesGuard`) for **Admins**, **Recruiters**, **Hiring Managers**, and **Candidates**.
-- **Kanban Candidate Pipeline:** Stage transitions (`APPLIED` → `SCREENED` → `SHORTLISTED` → `INTERVIEW_SCHEDULED` → `OFFER` → `HIRED` / `REJECTED`) with automated triggers and cached AI scores.
-- **Secure File Uploads & Extraction:** PDF processing with size/type validation, disk persistence, and text extraction for resume evaluation.
-
-### ⚡ 3. Real-Time Collaboration & Analytics
-- **Live Notifications:** WebSocket gateway (`Socket.io`) broadcasting candidate stage shifts, interview reminders, and pipeline events instantly across team dashboards.
-- **Admin & HR Analytics:** Visual dashboards offering metrics on candidate funnel conversion, hiring velocity, AI score distribution, and role activity.
+In traditional SME recruitment, HR teams waste dozens of hours writing job listings, manually reading CVs, preparing generic interview questions, and drafting offer letters. **TalentBridge automates these tasks with an integrated Google Gemini 1.5 Flash AI Engine**, while enforcing a strict **multi-tenant role-based pipeline**, real-time **WebSocket updates**, and complete **data privacy compliance**.
 
 ---
 
-## 🏗️ Architecture & Monorepo Structure
+## ✨ Key Features & Capabilities
+
+```
+                      ┌──────────────────────────────────────────────┐
+                      │    TalentBridge Recruitment Lifecycle        │
+                      └──────────────────────┬───────────────────────┘
+                                             │
+      ┌──────────────────┬───────────────────┼───────────────────┬──────────────────┐
+      │                  │                   │                   │                  │
+      ▼                  ▼                   ▼                   ▼                  ▼
+┌───────────┐      ┌───────────┐       ┌───────────┐       ┌───────────┐      ┌───────────┐
+│  APPLIED  │ ───► │ SCREENED  │  ───► │SHORTLISTED│  ───► │ INTERVIEW │ ───► │   OFFER   │
+└───────────┘      └───────────┘       └───────────┘       └───────────┘      └───────────┘
+      │                  │                   │                   │                  │
+   PDF CV             AI Match          Role-Guarded         AI Question         AI Offer
+ Upload &            Scorer &           Recruiter &           Suggester            Letter
+ Extraction         Extraction          HM Review             & Schedule          Drafter
+```
+
+### 🤖 1. AI-Augmented HR Workflows (Google Gemini 1.5 Flash)
+- 📝 **AI Job Description Generator:** Generates structured, bias-free job descriptions containing role summaries, key responsibilities, and skill requirements from minimal inputs.
+- 🎯 **CV Parser & Match Scorer (0–100):** Extracts plain text from candidate CV PDFs using `pdf-parse` and evaluates skill fit against job criteria, producing a score, strengths, and identified skill gaps.
+- 💡 **Tailored Interview Question Suggester:** Generates candidate-specific technical, behavioral, and system design questions targeting candidate skill gaps, complete with *"what to listen for"* evaluation signals.
+- ✉️ **Automated Offer Letter Drafter:** Drafts personalized, formal job offer letters incorporating candidate names, salaries, start dates, and benefits.
+
+### 🛡️ 2. Multi-Tenant Governance & Security
+- 🔐 **Role-Guarded Authorization:** Strict global `JwtAuthGuard` and `@Roles()` guards protecting backend routes across 4 distinct roles: **Admin**, **Recruiter**, **Hiring Manager**, and **Candidate**.
+- 🔑 **Server-Side Session Revocation:** Hashed refresh token persistence (`refreshTokenHash`) in PostgreSQL ensuring instantaneous session revocation upon logout.
+
+### ⚡ 3. Real-Time Pipeline Collaboration
+- 📡 **Socket.io WebSockets:** Live event gateway emitting instant notifications across user dashboards when application stages transition (`APPLIED` → `SCREENED` → `SHORTLISTED` → `INTERVIEW` → `OFFER` → `HIRED`/`REJECTED`).
+
+---
+
+## 🧠 AI Engine Architecture
+
+TalentBridge encapsulates all LLM interactions inside a decoupled `AiProxyModule` using a zero-lock-in `AiProvider` interface:
 
 ```text
-talentbridge/
-├── backend/                  # NestJS 10 REST & WebSocket API Gateway
-│   ├── src/
-│   │   ├── ai-proxy/         # AI Proxy Module (Google Gemini 1.5 Integration)
-│   │   ├── applications/     # Candidate Application & State Machine Logic
-│   │   ├── auth/             # JWT Authentication & Role-Based Access Control
-│   │   ├── companies/        # Tenant & SME Company Management
-│   │   ├── cv/               # PDF Parsing & Resume Management
-│   │   ├── interviews/       # Scheduling & AI Question Suggestion
-│   │   ├── jobs/             # Job Posting Management & AI Description Generation
-│   │   ├── notifications/    # WebSocket Gateway & Notification Service
-│   │   ├── offers/           # Offer Management & AI Draft Generation
-│   │   └── users/            # Account Management & User Roles
-│   ├── test/                 # E2E & Integration Test Suites
-│   └── Dockerfile            # Production Multi-stage Container Dockerfile
-│
-├── frontend/                 # React 18 + TypeScript Client Application (Vite)
-│   ├── src/
-│   │   ├── api/              # Axios HTTP Clients & API Interceptors
-│   │   ├── components/       # Reusable UI Design System & Cards
-│   │   ├── pages/            # Role-Based Dashboard Views & Portals
-│   │   └── store/            # State Management (Zustand)
-│   └── vite.config.ts        # Vite Bundler Configuration
-│
-├── docs/                     # System Design & Governance Documentation
-│   ├── AI_INTEGRATION_REPORT.md  # Detailed Prompt Engineering & AI Architecture
-│   ├── API_CONTRACT.md           # Comprehensive REST Endpoint Contracts
-│   ├── BUILD_LOG.md              # Chronological Engineering Decision Log
-│   ├── DATA_PRIVACY.md           # GDPR & Privacy Compliance Specification
-│   └── ER_DIAGRAM.md             # Complete Database Entity Relationship Model
-│
-└── docker-compose.yml        # Orchestration for Database & Backend Services
+               ┌───────────────────────────────────────────────────┐
+               │                NestJS Service Layer               │
+               │   (JdGenerator / CvScorer / QuestionSuggester)   │
+               └─────────────────────────┬─────────────────────────┘
+                                         │
+                                         ▼
+               ┌───────────────────────────────────────────────────┐
+               │           AiProxyService (Resilience Proxy)       │
+               │  - Exponential Backoff Retries (3 Attempts)       │
+               │  - Structured JSON Regex Sanitization             │
+               │  - Degrade-Don't-Block Fallback Defaults           │
+               └─────────────────────────┬─────────────────────────┘
+                                         │
+                                         ▼
+               ┌───────────────────────────────────────────────────┐
+               │              AiProvider (Interface)               │
+               └──────────┬─────────────────────────────┬──────────┘
+                          │                             │
+                          ▼                             ▼
+            ┌───────────────────────────┐  ┌─────────────────────────┐
+            │  Google Gemini Provider   │  │  OpenAI / Claude Provider│
+            │  (gemini-1.5-flash API)   │  │  (One-File Swap Ready)  │
+            └───────────────────────────┘  └─────────────────────────┘
 ```
 
 ---
 
-## 🛠️ Tech Stack
+## 🏗️ System Architecture & Monorepo Layout
 
-### **Frontend**
-| Library / Technology | Description |
-| :--- | :--- |
-| **React v18** | UI component architecture with strict functional patterns |
-| **TypeScript** | End-to-end static type safety |
-| **Vite v6** | Next-generation instant development & build server |
-| **React Router v6** | Declarative client-side routing & route guards |
-| **Zustand** | Lightweight, high-performance global state management |
-| **Lucide React** | Modern iconography design system |
-| **Socket.io Client** | Real-time WebSocket channel communication |
-
-### **Backend**
-| Component / Library | Description |
-| :--- | :--- |
-| **NestJS v10** | Enterprise Node.js framework with modular architecture |
-| **TypeORM v1.0** | Robust ORM for PostgreSQL with migration support |
-| **PostgreSQL 15** | Relational database engine |
-| **Passport JWT** | Secure access token & refresh token session control |
-| **Swagger / OpenAPI** | Auto-generated interactive REST API documentation |
-| **PDF-Parse** | High-speed server-side document text extraction |
-| **Socket.io** | Bidirectional WebSocket event gateway |
+```text
+talentbridge/
+├── backend/                      # NestJS v10 REST & WebSocket API Engine
+│   ├── src/
+│   │   ├── ai-proxy/             # Gemini 1.5 LLM Integration & Provider Proxy
+│   │   ├── applications/         # Hiring Pipeline State Machine & CV Scorer
+│   │   ├── auth/                 # JWT Authentication & RBAC Guards
+│   │   ├── companies/            # Multi-tenant Company Management
+│   │   ├── cv/                   # PDF Upload & Server-side Text Extraction
+│   │   ├── interviews/           # Interview Scheduling & AI Question Suggester
+│   │   ├── jobs/                 # Job Posting CRUD & AI JD Generator
+│   │   ├── notifications/        # WebSocket Gateway (Socket.io)
+│   │   ├── offers/               # Offer Management & AI Letter Drafter
+│   │   └── users/                # User Management & Role Access
+│   ├── test/                     # Jest E2E & Integration Test Suites
+│   └── Dockerfile                # Multi-stage Backend Container Dockerfile
+│
+├── frontend/                     # React 18 + TypeScript Client (Vite)
+│   ├── src/
+│   │   ├── api/                  # Axios HTTP Client & API Interceptors
+│   │   ├── components/           # Reusable UI Design System & Cards
+│   │   ├── pages/                # Admin, Recruiter, HM & Candidate Dashboards
+│   │   └── store/                # Zustand Auth & Application State
+│   └── vite.config.ts            # Vite Bundler & Dev Server Config
+│
+├── docs/                         # Architecture & Compliance Vault
+│   ├── AI_INTEGRATION_REPORT.md  # Detailed Prompt Engineering & AI Architecture
+│   ├── API_CONTRACT.md           # REST Endpoint Contracts & Payload Schemas
+│   ├── BUILD_LOG.md              # Chronological Engineering Decision History
+│   ├── DATA_PRIVACY.md           # GDPR & Resume Data Privacy Policies
+│   └── ER_DIAGRAM.md             # PostgreSQL Entity Relationship Model
+│
+└── docker-compose.yml            # Multi-Container Orchestration (Postgres + Backend)
+```
 
 ---
 
 ## 🔐 Role-Based Access Control (RBAC) Matrix
 
-| Action / Endpoint Area | Candidate | Hiring Manager | Recruiter | Admin |
+| Feature / Action | Candidate | Hiring Manager | Recruiter | Admin |
 | :--- | :---: | :---: | :---: | :---: |
-| **View Job Listings** | 👁️ Public | 👁️ Company | 👁️ Company | ⚡ All |
-| **Apply for Job / Upload CV** | ✅ Yes | ❌ No | ❌ No | ❌ No |
+| **View Published Jobs** | 👁️ Public | 👁️ Company | 👁️ Company | ⚡ All |
+| **Apply for Job & Upload CV** | ✅ Yes | ❌ No | ❌ No | ❌ No |
 | **Generate AI Job Description** | ❌ No | ✅ Yes | ✅ Yes | ⚡ All |
-| **Screen CV & AI Scoring** | ❌ No | 👁️ Read-Only | ✅ Trigger/Manage | ⚡ All |
-| **Schedule Interview & AI Questions**| ❌ No | ✅ Assigned | ✅ Full Control | ⚡ All |
+| **Screen CV & AI Match Scoring** | ❌ No | 👁️ Read-Only | ✅ Trigger/Manage | ⚡ All |
+| **Schedule Interview & AI Questions** | ❌ No | ✅ Assigned | ✅ Full Control | ⚡ All |
 | **Draft & Issue AI Offer Letter** | ❌ No | 👁️ Review | ✅ Draft & Issue | ⚡ All |
-| **Manage Company & Users** | ❌ No | ❌ No | ❌ No | ⚡ Admin Only |
-
----
-
-## 🧠 AI Layer & Prompt Engineering
-
-The AI core is encapsulated in the backend `AiProxyModule`, abstracting Gemini API interactions behind an internal `AiProvider` interface.
-
-```
-                  ┌─────────────────────────────────────┐
-                  │          NestJS Controller          │
-                  └──────────────────┬──────────────────┘
-                                     │
-                                     ▼
-                  ┌─────────────────────────────────────┐
-                  │          AiProxyService             │
-                  └──────────────────┬──────────────────┘
-                                     │
-                                     ▼
-                  ┌─────────────────────────────────────┐
-                  │      AiProvider (Interface)         │
-                  └──────────┬──────────────────────┬───┘
-                             │                      │
-                             ▼                      ▼
-               ┌────────────────────────┐  ┌─────────────────┐
-               │ Google Gemini Provider │  │ OpenAI Provider │ (Swappable)
-               │ (gemini-1.5-flash)     │  │ (Future Swap)   │
-               └────────────────────────┘  └─────────────────┘
-```
-
-### Architectural Guarantees:
-1. **Zero-Lock-in Abstraction:** Swapping Gemini with OpenAI (GPT-4o) or Anthropic (Claude) requires modifying a single provider file (`backend/src/ai-proxy/providers/`).
-2. **Structured JSON Enforcement:** Prompts demand JSON matching strict schemas. Response output undergoes regex sanitization and markdown fence stripping (` ```json `).
-3. **Resilience & Graceful Degradation:** Automatic exponential backoff retries (3 attempts with jitter) handle transient 429/503 limits. Operations degrade gracefully if LLM endpoints are unreachable.
-4. **Cost & Latency Optimization:** AI outputs are cached directly on database entity records (`JobPosting`, `Application`, `Interview`, `Offer`), preventing redundant LLM calls.
+| **Manage Tenant & System Users** | ❌ No | ❌ No | ❌ No | ⚡ Admin Only |
 
 ---
 
@@ -171,107 +157,99 @@ The AI core is encapsulated in the backend `AiProxyModule`, abstracting Gemini A
 
 ### Prerequisites
 - **Node.js** >= 18.x
-- **npm** >= 9.x
-- **Docker & Docker Compose** (Recommended for quick database setup)
-- **Google Gemini API Key** (Free tier available at [Google AI Studio](https://ai.google.dev))
+- **PostgreSQL** >= 15.x *(or Docker)*
+- **Google Gemini API Key** *(Free tier available at [Google AI Studio](https://ai.google.dev))*
 
 ---
 
-### Environment Configuration
-
-#### Backend Setup (`backend/.env`)
-Create a `.env` file in the `backend/` directory based on `.env.example`:
-
-```env
-PORT=3000
-NODE_ENV=development
-
-# Database Settings
-DB_HOST=localhost
-DB_PORT=5432
-DB_USERNAME=talentbridge
-DB_PASSWORD=talentbridge
-DB_NAME=talentbridge
-
-# JWT Authentication
-JWT_SECRET=super_secret_jwt_access_key_2026
-JWT_EXPIRATION=15m
-JWT_REFRESH_SECRET=super_secret_jwt_refresh_key_2026
-JWT_REFRESH_EXPIRATION=7d
-
-# Google Gemini AI Integration
-GEMINI_API_KEY=your_gemini_api_key_here
-```
-
----
-
-### Quick Start with Docker (Recommended)
-
-Run the database and backend seamlessly using Docker Compose:
+### Option A: Quick Start with Docker Compose 🐳
 
 ```bash
 # 1. Clone the repository
 git clone https://github.com/Mustafa-Hazard/TalentBridge.git
 cd TalentBridge
 
-# 2. Start PostgreSQL database container
-docker compose up -d db
+# 2. Configure Backend Environment
+cp backend/.env.example backend/.env
+# Edit backend/.env and add your GEMINI_API_KEY
 
-# 3. Initialize & Run Backend
+# 3. Start PostgreSQL and Backend Containers
+docker compose up -d
+
+# 4. In a second terminal, start Frontend
+cd frontend
+npm install
+npm run dev
+```
+
+---
+
+### Option B: Local Native Setup (Without Docker) 💻
+
+```bash
+# 1. Start Local PostgreSQL Service & Create Database
+sudo service postgresql start
+sudo -u postgres psql -c "CREATE DATABASE talentbridge;"
+sudo -u postgres psql -c "CREATE USER talentbridge WITH PASSWORD 'talentbridge';"
+sudo -u postgres psql -c "GRANT ALL PRIVILEGES ON DATABASE talentbridge TO talentbridge;"
+sudo -u postgres psql -d talentbridge -c "GRANT ALL ON SCHEMA public TO talentbridge;"
+
+# 2. Start Backend
 cd backend
 npm install
 npm run migration:run
 npm run start:dev
 
-# 4. In a new terminal, run Frontend
-cd ../frontend
+# 3. Start Frontend (New Terminal Window)
+cd frontend
 npm install
 npm run dev
 ```
 
-The application will be accessible at:
-- **Frontend App:** `http://localhost:5173`
-- **Backend API:** `http://localhost:3000`
-- **Swagger Documentation:** `http://localhost:3000/api`
+The application will be running at:
+- 🌐 **Frontend Application:** `http://localhost:5173`
+- ⚙️ **Backend REST API:** `http://localhost:3000`
+- 📚 **Interactive Swagger API Docs:** `http://localhost:3000/api`
 
 ---
 
 ## 🧪 Testing & Quality Assurance
 
-TalentBridge contains comprehensive unit and end-to-end (E2E) testing suites.
+TalentBridge features comprehensive unit, controller, and E2E test suites with 100% pass rates:
 
 ```bash
-# Run unit tests
+# Run backend unit & integration tests (145 passing tests)
 cd backend
 npm run test
 
-# Run tests with code coverage report
+# Run tests with coverage report
 npm run test:cov
 
-# Run E2E tests (Requires running database)
-npm run test:e2e
+# Run backend & frontend linters
+cd backend && npm run lint
+cd frontend && npm run lint
 ```
 
 ---
 
-## 📚 Project Documentation
+## 📚 Documentation Vault
 
-For exhaustive technical specifications, architectural diagrams, and compliance documents, consult the `/docs` directory:
+Detailed system design and compliance specifications are located in `/docs`:
 
-- 📊 **[Entity Relationship Diagram (docs/ER_DIAGRAM.md)](file:///home/mustafa_muhammad/Eden/Project/talentbridge/docs/ER_DIAGRAM.md):** Comprehensive database schema and relationships.
-- 🔌 **[API Contract Specification (docs/API_CONTRACT.md)](file:///home/mustafa_muhammad/Eden/Project/talentbridge/docs/API_CONTRACT.md):** Complete REST endpoint descriptions, request bodies, and responses.
-- 🤖 **[AI Integration & Prompt Report (docs/AI_INTEGRATION_REPORT.md)](file:///home/mustafa_muhammad/Eden/Project/talentbridge/docs/AI_INTEGRATION_REPORT.md):** In-depth prompt evolution, schema enforcement, and cost optimization details.
-- 📝 **[Engineering Build Log (docs/BUILD_LOG.md)](file:///home/mustafa_muhammad/Eden/Project/talentbridge/docs/BUILD_LOG.md):** Step-by-step development history and design rationale.
-- 🛡️ **[Data Privacy & Compliance (docs/DATA_PRIVACY.md)](file:///home/mustafa_muhammad/Eden/Project/talentbridge/docs/DATA_PRIVACY.md):** Resume data handling, AI processing ethics, and privacy policies.
+- 📊 **[Entity Relationship Diagram (docs/ER_DIAGRAM.md)](file:///home/mustafa_muhammad/Eden/Project/talentbridge/docs/ER_DIAGRAM.md):** Complete PostgreSQL database schema.
+- 🔌 **[API Contract Specification (docs/API_CONTRACT.md)](file:///home/mustafa_muhammad/Eden/Project/talentbridge/docs/API_CONTRACT.md):** REST endpoints, headers, and response payloads.
+- 🤖 **[AI Integration & Prompt Engineering Report (docs/AI_INTEGRATION_REPORT.md)](file:///home/mustafa_muhammad/Eden/Project/talentbridge/docs/AI_INTEGRATION_REPORT.md):** Prompt iteration logs and JSON schema enforcement.
+- 📝 **[Engineering Build Log (docs/BUILD_LOG.md)](file:///home/mustafa_muhammad/Eden/Project/talentbridge/docs/BUILD_LOG.md):** Architecture decision record and phase progression.
+- 🛡️ **[Data Privacy & GDPR Policy (docs/DATA_PRIVACY.md)](file:///home/mustafa_muhammad/Eden/Project/talentbridge/docs/DATA_PRIVACY.md):** Candidate CV text handling & data security policies.
 
 ---
 
 ## 📜 License
 
-Distributed under the MIT License. See `LICENSE` for details.
-
----
+Distributed under the MIT License. See `LICENSE` for more information.
 
 <div align="center">
-Built with ❤️ for SME Recruitment Excellence.
+
+**Built with ❤️ by [Mustafa Muhammad Iqbal](https://github.com/Mustafa-Hazard)**
+
 </div>
