@@ -385,15 +385,18 @@ export function RecruiterDashboard() {
                 </span>
                 <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.35rem' }}>
                   {(Array.isArray(job.requiredSkills)
-                    ? job.requiredSkills
+                    ? job.requiredSkills.flatMap((s: string) => (typeof s === 'string' ? s.split(/[,;]+/) : s))
                     : typeof job.requiredSkills === 'string'
-                    ? job.requiredSkills.split(/[,;\s]+/).filter(Boolean)
+                    ? job.requiredSkills.split(/[,;]+/)
                     : []
-                  ).map((skill: string, idx: number) => (
-                    <span key={idx} className="mono-tag" style={{ fontSize: '0.68rem' }}>
-                      {skill}
-                    </span>
-                  ))}
+                  )
+                    .map((s: string) => String(s).trim())
+                    .filter(Boolean)
+                    .map((skill: string, idx: number) => (
+                      <span key={idx} className="mono-tag" style={{ fontSize: '0.68rem' }}>
+                        {skill}
+                      </span>
+                    ))}
                 </div>
               </div>
 
