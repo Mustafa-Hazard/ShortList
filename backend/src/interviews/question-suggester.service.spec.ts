@@ -42,12 +42,14 @@ describe('QuestionSuggesterService', () => {
   it('parses valid JSON array response into SuggestedQuestion objects', async () => {
     const aiOutputJson = JSON.stringify([
       {
-        question: 'How have you used NestJS dependency injection in past projects?',
+        question:
+          'How have you used NestJS dependency injection in past projects?',
         listenFor: 'Understanding of providers, modules, and scope management.',
       },
       {
         question: 'Explain how you optimize complex SQL queries in PostgreSQL.',
-        listenFor: 'Index usage, EXPLAIN ANALYZE understanding, and query structure.',
+        listenFor:
+          'Index usage, EXPLAIN ANALYZE understanding, and query structure.',
       },
     ]);
 
@@ -59,7 +61,8 @@ describe('QuestionSuggesterService', () => {
     expect(result[0].question).toContain('NestJS dependency injection');
     expect(result[0].listenFor).toContain('providers, modules');
 
-    const [promptArg, optionsArg] = aiProxyService.generateContent.mock.calls[0];
+    const [promptArg, optionsArg] =
+      aiProxyService.generateContent.mock.calls[0];
     expect(promptArg).toContain('TECHNICAL');
     expect(promptArg).toContain('Senior Backend Engineer');
     expect(promptArg).toContain('No explicit NestJS experience mentioned');

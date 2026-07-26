@@ -33,5 +33,9 @@ backend/uploads/
 coverage/
 **/coverage/
 
+# Local Manuals (Ignored from GitHub)
+PROJECT_MANUAL.md
+MANUAL.md
+
 # Vite
 frontend/dist/

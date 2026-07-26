@@ -108,7 +108,10 @@ describe('AuthService', () => {
 
     it('creates a company when registering as admin with companyName', async () => {
       companiesService.create.mockResolvedValue({ id: 'company-1' } as any);
-      usersService.create.mockResolvedValue({ ...fakeUser, role: Role.ADMIN } as any);
+      usersService.create.mockResolvedValue({
+        ...fakeUser,
+        role: Role.ADMIN,
+      } as any);
 
       await service.register({
         email: 'admin@example.com',
@@ -159,14 +162,21 @@ describe('AuthService', () => {
     it('rejects a refresh token that fails verification', async () => {
       jwtService.verifyAsync.mockRejectedValue(new Error('bad token'));
 
-      await expect(service.refresh('garbage')).rejects.toThrow(UnauthorizedException);
+      await expect(service.refresh('garbage')).rejects.toThrow(
+        UnauthorizedException,
+      );
     });
 
     it('rejects a refresh token for a user with no stored hash (logged out)', async () => {
       jwtService.verifyAsync.mockResolvedValue({ sub: fakeUser.id } as any);
-      usersService.findById.mockResolvedValue({ ...fakeUser, refreshTokenHash: null } as any);
+      usersService.findById.mockResolvedValue({
+        ...fakeUser,
+        refreshTokenHash: null,
+      } as any);
 
-      await expect(service.refresh('some-token')).rejects.toThrow(UnauthorizedException);
+      await expect(service.refresh('some-token')).rejects.toThrow(
+        UnauthorizedException,
+      );
     });
 
     it('rejects a refresh token that does not match the stored hash', async () => {
@@ -177,7 +187,9 @@ describe('AuthService', () => {
         refreshTokenHash: storedHash,
       } as any);
 
-      await expect(service.refresh('presented-token')).rejects.toThrow(UnauthorizedException);
+      await expect(service.refresh('presented-token')).rejects.toThrow(
+        UnauthorizedException,
+      );
     });
   });
 });

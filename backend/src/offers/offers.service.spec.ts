@@ -46,7 +46,11 @@ describe('OffersService', () => {
     jobPostingId: 'posting-1',
     candidateId: 'candidate-1',
     candidate: { firstName: 'Jane', lastName: 'Doe' },
-    jobPosting: { id: 'posting-1', companyId: 'company-1', status: JobStatus.PUBLISHED },
+    jobPosting: {
+      id: 'posting-1',
+      companyId: 'company-1',
+      status: JobStatus.PUBLISHED,
+    },
   };
 
   const baseOffer: Offer = {
@@ -109,7 +113,9 @@ describe('OffersService', () => {
       applicationsRepo.findOne.mockResolvedValue(baseApplication);
       jobsService.findOne.mockResolvedValue(baseApplication.jobPosting as any);
       offersRepo.findOne.mockResolvedValue(null);
-      offerDrafterService.generateDraft.mockResolvedValue('Generated AI Letter');
+      offerDrafterService.generateDraft.mockResolvedValue(
+        'Generated AI Letter',
+      );
       offersRepo.create.mockReturnValue(baseOffer);
       offersRepo.save.mockResolvedValue(baseOffer);
 
@@ -161,7 +167,9 @@ describe('OffersService', () => {
       applicationsRepo.findOne.mockResolvedValue(baseApplication);
       jobsService.findOne.mockResolvedValue(baseApplication.jobPosting as any);
       offersRepo.findOne.mockResolvedValue(null);
-      offerDrafterService.generateDraft.mockRejectedValue(new Error('AI service error'));
+      offerDrafterService.generateDraft.mockRejectedValue(
+        new Error('AI service error'),
+      );
       offersRepo.create.mockReturnValue(baseOffer);
       offersRepo.save.mockResolvedValue(baseOffer);
 
@@ -186,7 +194,10 @@ describe('OffersService', () => {
 
   describe('approveLetter', () => {
     it('sets letterApproved to true', async () => {
-      offersRepo.findOne.mockResolvedValue({ ...baseOffer, letterApproved: false });
+      offersRepo.findOne.mockResolvedValue({
+        ...baseOffer,
+        letterApproved: false,
+      });
       jobsService.findOne.mockResolvedValue(baseApplication.jobPosting as any);
       offersRepo.save.mockImplementation((o: any) => Promise.resolve(o));
 
@@ -200,7 +211,9 @@ describe('OffersService', () => {
     it('generates a new drafted letter via OfferDrafterService', async () => {
       offersRepo.findOne.mockResolvedValue({ ...baseOffer });
       jobsService.findOne.mockResolvedValue(baseApplication.jobPosting as any);
-      offerDrafterService.generateDraft.mockResolvedValue('New Regenerated Letter');
+      offerDrafterService.generateDraft.mockResolvedValue(
+        'New Regenerated Letter',
+      );
       offersRepo.save.mockImplementation((o: any) => Promise.resolve(o));
 
       const result = await service.generateLetter('offer-1', recruiter);
@@ -211,7 +224,10 @@ describe('OffersService', () => {
 
   describe('respond', () => {
     it('allows candidate to respond to an approved offer', async () => {
-      offersRepo.findOne.mockResolvedValue({ ...baseOffer, letterApproved: true });
+      offersRepo.findOne.mockResolvedValue({
+        ...baseOffer,
+        letterApproved: true,
+      });
       offersRepo.save.mockImplementation((o: any) => Promise.resolve(o));
 
       const result = await service.respond(
@@ -224,19 +240,21 @@ describe('OffersService', () => {
     });
 
     it('rejects candidate response if offer letter is not yet approved by staff', async () => {
-      offersRepo.findOne.mockResolvedValue({ ...baseOffer, letterApproved: false });
+      offersRepo.findOne.mockResolvedValue({
+        ...baseOffer,
+        letterApproved: false,
+      });
 
       await expect(
-        service.respond(
-          'offer-1',
-          { status: OfferStatus.ACCEPTED },
-          candidate,
-        ),
+        service.respond('offer-1', { status: OfferStatus.ACCEPTED }, candidate),
       ).rejects.toThrow(BadRequestException);
     });
 
     it('forbids candidate response if candidateId does not match', async () => {
-      offersRepo.findOne.mockResolvedValue({ ...baseOffer, letterApproved: true });
+      offersRepo.findOne.mockResolvedValue({
+        ...baseOffer,
+        letterApproved: true,
+      });
 
       await expect(
         service.respond(
@@ -250,7 +268,10 @@ describe('OffersService', () => {
 
   describe('findForApplication & findOne', () => {
     it('hides unapproved offer from candidate as 404', async () => {
-      offersRepo.findOne.mockResolvedValue({ ...baseOffer, letterApproved: false });
+      offersRepo.findOne.mockResolvedValue({
+        ...baseOffer,
+        letterApproved: false,
+      });
 
       await expect(service.findOne('offer-1', candidate)).rejects.toThrow(
         NotFoundException,
@@ -258,7 +279,10 @@ describe('OffersService', () => {
     });
 
     it('returns approved offer to candidate', async () => {
-      offersRepo.findOne.mockResolvedValue({ ...baseOffer, letterApproved: true });
+      offersRepo.findOne.mockResolvedValue({
+        ...baseOffer,
+        letterApproved: true,
+      });
 
       const result = await service.findOne('offer-1', candidate);
 
@@ -266,7 +290,10 @@ describe('OffersService', () => {
     });
 
     it('returns unapproved offer to company staff member', async () => {
-      offersRepo.findOne.mockResolvedValue({ ...baseOffer, letterApproved: false });
+      offersRepo.findOne.mockResolvedValue({
+        ...baseOffer,
+        letterApproved: false,
+      });
       jobsService.findOne.mockResolvedValue(baseApplication.jobPosting as any);
 
       const result = await service.findOne('offer-1', recruiter);

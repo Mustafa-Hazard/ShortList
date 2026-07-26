@@ -19,7 +19,9 @@ export const entities = [
   Notification,
 ];
 
-export function buildDataSourceOptions(env: NodeJS.ProcessEnv = process.env): DataSourceOptions {
+export function buildDataSourceOptions(
+  env: NodeJS.ProcessEnv = process.env,
+): DataSourceOptions {
   return {
     type: 'postgres',
     host: env.DB_HOST ?? 'localhost',

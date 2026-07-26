@@ -65,7 +65,7 @@ export class InterviewsService {
           proposedSlots: saved.proposedSlots,
         },
       );
-    } catch (err) {
+    } catch {
       // Degrade-don't-block
     }
 
@@ -115,7 +115,7 @@ export class InterviewsService {
             confirmedSlot: confirmedDate,
           },
         );
-      } catch (err) {
+      } catch {
         // Degrade-don't-block
       }
     }

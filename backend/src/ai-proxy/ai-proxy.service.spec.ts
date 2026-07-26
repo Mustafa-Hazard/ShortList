@@ -121,9 +121,9 @@ describe('AiProxyService', () => {
     }).compile();
     const unconfiguredService = module.get<AiProxyService>(AiProxyService);
 
-    await expect(
-      unconfiguredService.generateContent('prompt'),
-    ).rejects.toThrow(AiProxyError);
+    await expect(unconfiguredService.generateContent('prompt')).rejects.toThrow(
+      AiProxyError,
+    );
     expect(global.fetch).not.toHaveBeenCalled();
   });
 });

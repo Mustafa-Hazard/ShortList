@@ -16,7 +16,9 @@ export interface CreateUserInput {
 
 @Injectable()
 export class UsersService {
-  constructor(@InjectRepository(User) private usersRepository: Repository<User>) {}
+  constructor(
+    @InjectRepository(User) private usersRepository: Repository<User>,
+  ) {}
 
   async findByEmail(email: string): Promise<User | null> {
     return this.usersRepository.findOneBy({ email: email.toLowerCase() });
@@ -28,7 +30,8 @@ export class UsersService {
 
   async create(input: CreateUserInput): Promise<User> {
     const existing = await this.findByEmail(input.email);
-    if (existing) throw new ConflictException('An account with this email already exists');
+    if (existing)
+      throw new ConflictException('An account with this email already exists');
 
     const passwordHash = await bcrypt.hash(input.password, 10);
     const user = this.usersRepository.create({
@@ -42,7 +45,10 @@ export class UsersService {
     return this.usersRepository.save(user);
   }
 
-  async setRefreshTokenHash(userId: string, refreshTokenHash: string | null): Promise<void> {
+  async setRefreshTokenHash(
+    userId: string,
+    refreshTokenHash: string | null,
+  ): Promise<void> {
     await this.usersRepository.update({ id: userId }, { refreshTokenHash });
   }
 }

@@ -35,7 +35,9 @@ export class CvController {
     @CurrentUser() user: User,
   ) {
     if (!file) {
-      throw new NotFoundException('No file was uploaded — expected a "file" field');
+      throw new NotFoundException(
+        'No file was uploaded — expected a "file" field',
+      );
     }
     return this.cvService.upload(applicationId, file, user);
   }

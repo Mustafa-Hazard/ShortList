@@ -1,4 +1,12 @@
-import { Body, Controller, Get, Param, ParseUUIDPipe, Post, Query } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Get,
+  Param,
+  ParseUUIDPipe,
+  Post,
+  Query,
+} from '@nestjs/common';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 import { ApplicationsService } from './applications.service';
 import { CreateApplicationDto } from './dto/create-application.dto';
@@ -30,7 +38,10 @@ export class ApplicationsController {
 
   @Roles(Role.RECRUITER, Role.HIRING_MANAGER, Role.ADMIN)
   @Get()
-  findForPosting(@Query() query: ApplicationQueryDto, @CurrentUser() user: User) {
+  findForPosting(
+    @Query() query: ApplicationQueryDto,
+    @CurrentUser() user: User,
+  ) {
     return this.applicationsService.findForPosting(query, user);
   }
 
@@ -54,7 +65,11 @@ export class ApplicationsController {
   @Roles(Role.RECRUITER, Role.HIRING_MANAGER, Role.ADMIN)
   @Post('bulk-transition')
   bulkTransition(@Body() dto: BulkTransitionDto, @CurrentUser() user: User) {
-    return this.applicationsService.bulkTransition(dto.applicationIds, dto.stage, user);
+    return this.applicationsService.bulkTransition(
+      dto.applicationIds,
+      dto.stage,
+      user,
+    );
   }
 
   @Roles(Role.RECRUITER, Role.HIRING_MANAGER, Role.ADMIN)

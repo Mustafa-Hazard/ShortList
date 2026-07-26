@@ -192,7 +192,7 @@ describe('ApplicationsService', () => {
       expect(result).toBe(baseApplication);
     });
 
-    it('hides another candidate\'s application as 404', async () => {
+    it("hides another candidate's application as 404", async () => {
       applicationsRepo.findOne.mockResolvedValue(baseApplication);
 
       await expect(
@@ -267,7 +267,11 @@ describe('ApplicationsService', () => {
       jobsService.findOne.mockResolvedValue(publishedPosting as any);
 
       await expect(
-        service.transition('app-1', ApplicationStage.SHORTLISTED, hiringManager),
+        service.transition(
+          'app-1',
+          ApplicationStage.SHORTLISTED,
+          hiringManager,
+        ),
       ).rejects.toThrow(BadRequestException);
     });
 
@@ -298,7 +302,8 @@ describe('ApplicationsService', () => {
   describe('bulkTransition', () => {
     it('reports per-id success and failure without aborting the batch', async () => {
       applicationsRepo.findOne.mockImplementation(({ where: { id } }: any) => {
-        if (id === 'app-1') return Promise.resolve({ ...baseApplication, id: 'app-1' });
+        if (id === 'app-1')
+          return Promise.resolve({ ...baseApplication, id: 'app-1' });
         if (id === 'app-2')
           return Promise.resolve({
             ...baseApplication,
@@ -361,7 +366,10 @@ describe('ApplicationsService', () => {
 
     it('forbids scoring an application for another company', async () => {
       const otherCompanyRecruiter = { ...recruiter, companyId: 'company-2' };
-      applicationsRepo.findOne.mockResolvedValue({ ...baseApplication, jobPosting: publishedPosting } as any);
+      applicationsRepo.findOne.mockResolvedValue({
+        ...baseApplication,
+        jobPosting: publishedPosting,
+      } as any);
       jobsService.findOne.mockRejectedValue(new ForbiddenException());
 
       await expect(

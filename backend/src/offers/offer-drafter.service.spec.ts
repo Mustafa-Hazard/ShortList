@@ -42,7 +42,8 @@ describe('OfferDrafterService', () => {
       'Dear Jane Candidate, We are thrilled to offer you the role of Senior Backend Engineer at Acme Corp...',
     );
 
-    const [promptArg, optionsArg] = aiProxyService.generateContent.mock.calls[0];
+    const [promptArg, optionsArg] =
+      aiProxyService.generateContent.mock.calls[0];
     expect(promptArg).toContain('Jane Candidate');
     expect(promptArg).toContain('Senior Backend Engineer');
     expect(promptArg).toContain('$130,000');

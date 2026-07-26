@@ -68,7 +68,10 @@ describe('ApplicationsController', () => {
   });
 
   it('bulkTransition delegates to service.bulkTransition with ids, stage, and current user', async () => {
-    const dto = { applicationIds: ['app-1', 'app-2'], stage: ApplicationStage.SCREENED };
+    const dto = {
+      applicationIds: ['app-1', 'app-2'],
+      stage: ApplicationStage.SCREENED,
+    };
     await controller.bulkTransition(dto, recruiter);
     expect(service.bulkTransition).toHaveBeenCalledWith(
       ['app-1', 'app-2'],

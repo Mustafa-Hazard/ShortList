@@ -54,7 +54,11 @@ export class Interview {
   @Column({ type: 'timestamptz', nullable: true })
   confirmedSlot: Date | null;
 
-  @Column({ type: 'enum', enum: InterviewStatus, default: InterviewStatus.PROPOSED })
+  @Column({
+    type: 'enum',
+    enum: InterviewStatus,
+    default: InterviewStatus.PROPOSED,
+  })
   status: InterviewStatus;
 
   // --- AI Feature 3: Interview Question Suggester output. Hiring manager can

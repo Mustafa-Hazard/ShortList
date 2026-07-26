@@ -111,7 +111,7 @@ Ensure at least 2 questions directly probe the candidate's identified gaps/conce
             listenFor: item.listenFor.trim(),
           }));
       }
-    } catch (err) {
+    } catch {
       this.logger.warn(
         `Failed to parse AI Question Suggester response: ${cleanText}`,
       );

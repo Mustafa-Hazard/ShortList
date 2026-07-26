@@ -35,6 +35,8 @@ async function bootstrap() {
   const port = config.get<number>('PORT', 3000);
   await app.listen(port);
   // eslint-disable-next-line no-console
-  console.log(`TalentBridge API running on http://localhost:${port}/api (docs at /api/docs)`);
+  console.log(
+    `TalentBridge API running on http://localhost:${port}/api (docs at /api/docs)`,
+  );
 }
 bootstrap();

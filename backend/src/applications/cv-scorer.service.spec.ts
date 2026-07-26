@@ -48,7 +48,10 @@ describe('CvScorerService', () => {
         educationLevel: "Bachelor's in Computer Science",
         lastRole: 'Backend Developer',
       },
-      aiStrengths: ['Strong match for NestJS and Node.js', '5 years backend experience'],
+      aiStrengths: [
+        'Strong match for NestJS and Node.js',
+        '5 years backend experience',
+      ],
       aiGaps: ['No explicit experience with Kubernetes'],
     });
 
@@ -58,11 +61,16 @@ describe('CvScorerService', () => {
 
     expect(result.aiScore).toBe(85);
     expect(result.aiExtraction.name).toBe('Jane Doe');
-    expect(result.aiExtraction.topSkills).toEqual(['Node.js', 'NestJS', 'PostgreSQL']);
+    expect(result.aiExtraction.topSkills).toEqual([
+      'Node.js',
+      'NestJS',
+      'PostgreSQL',
+    ]);
     expect(result.aiStrengths).toHaveLength(2);
     expect(result.aiGaps).toHaveLength(1);
 
-    const [promptArg, optionsArg] = aiProxyService.generateContent.mock.calls[0];
+    const [promptArg, optionsArg] =
+      aiProxyService.generateContent.mock.calls[0];
     expect(promptArg).toContain('Senior Backend Engineer');
     expect(promptArg).toContain('Node.js, PostgreSQL, NestJS');
     expect(promptArg).toContain('5 years in Postgres');

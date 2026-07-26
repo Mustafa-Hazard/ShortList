@@ -26,8 +26,16 @@ describe('CvService', () => {
   let cvRepo: any;
   let applicationsService: any;
 
-  const mockCandidate = { id: 'cand-1', companyId: 'comp-1', role: 'candidate' };
-  const mockApplication = { id: 'app-1', candidateId: 'cand-1', jobPosting: { companyId: 'comp-1' } };
+  const mockCandidate = {
+    id: 'cand-1',
+    companyId: 'comp-1',
+    role: 'candidate',
+  };
+  const mockApplication = {
+    id: 'app-1',
+    candidateId: 'cand-1',
+    jobPosting: { companyId: 'comp-1' },
+  };
   const mockCv = {
     id: 'cv-1',
     applicationId: 'app-1',
@@ -54,7 +62,9 @@ describe('CvService', () => {
           provide: getRepositoryToken(Cv),
           useValue: {
             create: jest.fn((dto) => ({ id: 'cv-1', ...dto })),
-            save: jest.fn((entity) => Promise.resolve({ id: 'cv-1', ...entity })),
+            save: jest.fn((entity) =>
+              Promise.resolve({ id: 'cv-1', ...entity }),
+            ),
             findOne: jest.fn(),
           },
         },
@@ -80,7 +90,11 @@ describe('CvService', () => {
     it('successfully uploads and extracts CV text', async () => {
       applicationsService.findOne.mockResolvedValue(mockApplication);
 
-      const result = await service.upload('app-1', mockFile, mockCandidate as any);
+      const result = await service.upload(
+        'app-1',
+        mockFile,
+        mockCandidate as any,
+      );
 
       expect(result).toBeDefined();
       expect(cvRepo.save).toHaveBeenCalled();
@@ -90,7 +104,11 @@ describe('CvService', () => {
     it('converts a duplicate-CV unique violation into a 400 and cleans up the file', async () => {
       applicationsService.findOne.mockResolvedValue(mockApplication);
 
-      const queryFailedErr = new QueryFailedError('query', [], new Error('duplicate key'));
+      const queryFailedErr = new QueryFailedError(
+        'query',
+        [],
+        new Error('duplicate key'),
+      );
       (queryFailedErr as any).driverError = { code: '23505' };
       cvRepo.save.mockRejectedValue(queryFailedErr);
 
@@ -109,7 +127,10 @@ describe('CvService', () => {
 
       const result = await service.findOne('cv-1', mockCandidate as any);
       expect(result).toEqual(mockCv);
-      expect(applicationsService.findOne).toHaveBeenCalledWith('app-1', mockCandidate);
+      expect(applicationsService.findOne).toHaveBeenCalledWith(
+        'app-1',
+        mockCandidate,
+      );
     });
 
     it('throws NotFoundException if CV does not exist', async () => {
@@ -127,7 +148,10 @@ describe('CvService', () => {
       applicationsService.findOne.mockResolvedValue(mockApplication);
 
       const result = await service.getFilePath('cv-1', mockCandidate as any);
-      expect(result).toEqual({ path: mockCv.storagePath, filename: mockCv.originalFilename });
+      expect(result).toEqual({
+        path: mockCv.storagePath,
+        filename: mockCv.originalFilename,
+      });
     });
   });
 });

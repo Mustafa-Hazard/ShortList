@@ -59,7 +59,7 @@ export class JobsService {
           responsibilities: dto.responsibilities,
           cultureNotes: dto.cultureNotes ?? null,
         });
-      } catch (error) {
+      } catch {
         // Degrade-don't-block: If AI proxy fails during auto-generation,
         // fall back gracefully so job creation succeeds.
         description = dto.description ?? null;
@@ -92,10 +92,7 @@ export class JobsService {
     return this.jobPostingsRepo.save(posting);
   }
 
-  async findAll(
-    query: JobPostingQueryDto,
-    user: User,
-  ): Promise<JobPosting[]> {
+  async findAll(query: JobPostingQueryDto, user: User): Promise<JobPosting[]> {
     // Candidates get the public job board: published postings across every
     // company, no draft/closed/archived leakage, status filter ignored.
     if (user.role === Role.CANDIDATE) {

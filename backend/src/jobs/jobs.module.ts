@@ -8,10 +8,7 @@ import { JdGeneratorService } from './jd-generator.service';
 import { AiProxyModule } from '../ai-proxy/ai-proxy.module';
 
 @Module({
-  imports: [
-    TypeOrmModule.forFeature([JobPosting, Application]),
-    AiProxyModule,
-  ],
+  imports: [TypeOrmModule.forFeature([JobPosting, Application]), AiProxyModule],
   controllers: [JobsController],
   providers: [JobsService, JdGeneratorService],
   exports: [JobsService, JdGeneratorService],

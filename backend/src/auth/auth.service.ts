@@ -28,13 +28,17 @@ export class AuthService {
     private config: ConfigService,
   ) {}
 
-  async register(dto: RegisterDto): Promise<{ user: Partial<User> } & AuthTokens> {
+  async register(
+    dto: RegisterDto,
+  ): Promise<{ user: Partial<User> } & AuthTokens> {
     const role = dto.role ?? Role.CANDIDATE;
     let companyId: string | null = null;
 
     if (role === Role.ADMIN) {
       if (!dto.companyName) {
-        throw new BadRequestException('companyName is required to register as admin');
+        throw new BadRequestException(
+          'companyName is required to register as admin',
+        );
       }
       const company = await this.companiesService.create(dto.companyName);
       companyId = company.id;
@@ -46,7 +50,9 @@ export class AuthService {
         await this.companiesService.findById(dto.companyId);
         companyId = dto.companyId;
       } else {
-        throw new BadRequestException(`companyName or companyId is required to register as ${role}`);
+        throw new BadRequestException(
+          `companyName or companyId is required to register as ${role}`,
+        );
       }
     }
 
@@ -83,7 +89,8 @@ export class AuthService {
     }
 
     const user = await this.usersService.findById(payload.sub);
-    if (!user?.refreshTokenHash) throw new UnauthorizedException('Session revoked');
+    if (!user?.refreshTokenHash)
+      throw new UnauthorizedException('Session revoked');
 
     const matches = await bcrypt.compare(refreshToken, user.refreshTokenHash);
     if (!matches) throw new UnauthorizedException('Session revoked');
@@ -122,7 +129,9 @@ export class AuthService {
   }
 
   private sanitize(user: User): Partial<User> {
-    const { passwordHash, refreshTokenHash, ...rest } = user;
+    const rest = { ...user };
+    delete rest.passwordHash;
+    delete rest.refreshTokenHash;
     return rest;
   }
 }

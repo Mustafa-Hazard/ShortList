@@ -111,7 +111,9 @@ describe('JobsService', () => {
 
   describe('create', () => {
     it('creates a draft posting with auto-generated description when description is omitted', async () => {
-      jdGeneratorService.generateDescription.mockResolvedValue('AI Description');
+      jdGeneratorService.generateDescription.mockResolvedValue(
+        'AI Description',
+      );
       jobPostingsRepo.create.mockReturnValue(basePosting);
       jobPostingsRepo.save.mockResolvedValue(basePosting);
 
@@ -191,16 +193,18 @@ describe('JobsService', () => {
     });
 
     it('rejects creation when the user has no company', async () => {
-      await expect(
-        service.create({} as any, candidate),
-      ).rejects.toThrow(BadRequestException);
+      await expect(service.create({} as any, candidate)).rejects.toThrow(
+        BadRequestException,
+      );
     });
   });
 
   describe('generateDescription', () => {
     it('generates description and updates the job posting', async () => {
       jobPostingsRepo.findOne.mockResolvedValue({ ...basePosting });
-      jdGeneratorService.generateDescription.mockResolvedValue('Regenerated JD');
+      jdGeneratorService.generateDescription.mockResolvedValue(
+        'Regenerated JD',
+      );
       jobPostingsRepo.save.mockImplementation((p: any) => Promise.resolve(p));
 
       const result = await service.generateDescription('posting-1', recruiter);
@@ -269,17 +273,17 @@ describe('JobsService', () => {
     it('hides a non-published posting from a candidate as 404', async () => {
       jobPostingsRepo.findOne.mockResolvedValue(basePosting); // status DRAFT
 
-      await expect(
-        service.findOne('posting-1', candidate),
-      ).rejects.toThrow(NotFoundException);
+      await expect(service.findOne('posting-1', candidate)).rejects.toThrow(
+        NotFoundException,
+      );
     });
 
     it('throws 404 when the posting does not exist', async () => {
       jobPostingsRepo.findOne.mockResolvedValue(null);
 
-      await expect(
-        service.findOne('missing', recruiter),
-      ).rejects.toThrow(NotFoundException);
+      await expect(service.findOne('missing', recruiter)).rejects.toThrow(
+        NotFoundException,
+      );
     });
 
     it('forbids staff from another company', async () => {
@@ -341,9 +345,9 @@ describe('JobsService', () => {
         status: JobStatus.PUBLISHED,
       });
 
-      await expect(
-        service.remove('posting-1', recruiter),
-      ).rejects.toThrow(BadRequestException);
+      await expect(service.remove('posting-1', recruiter)).rejects.toThrow(
+        BadRequestException,
+      );
     });
   });
 

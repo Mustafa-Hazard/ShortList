@@ -53,10 +53,16 @@ describe('CvController', () => {
 
   it('delegates to cvService.getFilePath and calls res.download on download', async () => {
     const mockRes = { download: jest.fn() } as any;
-    cvService.getFilePath.mockResolvedValue({ path: 'uploads/test.pdf', filename: 'resume.pdf' });
+    cvService.getFilePath.mockResolvedValue({
+      path: 'uploads/test.pdf',
+      filename: 'resume.pdf',
+    });
 
     await controller.download('cv-1', mockUser as any, mockRes);
     expect(cvService.getFilePath).toHaveBeenCalledWith('cv-1', mockUser);
-    expect(mockRes.download).toHaveBeenCalledWith('uploads/test.pdf', 'resume.pdf');
+    expect(mockRes.download).toHaveBeenCalledWith(
+      'uploads/test.pdf',
+      'resume.pdf',
+    );
   });
 });

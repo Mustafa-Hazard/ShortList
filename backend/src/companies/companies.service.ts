@@ -5,7 +5,9 @@ import { Company } from './company.entity';
 
 @Injectable()
 export class CompaniesService {
-  constructor(@InjectRepository(Company) private companiesRepository: Repository<Company>) {}
+  constructor(
+    @InjectRepository(Company) private companiesRepository: Repository<Company>,
+  ) {}
 
   async create(name: string): Promise<Company> {
     const company = this.companiesRepository.create({ name });

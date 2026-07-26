@@ -13,7 +13,7 @@ import { ApplicationsService } from '../applications/applications.service';
 import { QuestionSuggesterService } from './question-suggester.service';
 import { NotificationsService } from '../notifications/notifications.service';
 import { InterviewStatus, InterviewType } from '../common/enums/interview.enum';
-import { JobStatus, JobType } from '../common/enums/job.enum';
+import { JobStatus } from '../common/enums/job.enum';
 import { Role } from '../common/enums/role.enum';
 import { User } from '../users/user.entity';
 
@@ -244,7 +244,10 @@ describe('InterviewsService', () => {
 
       const result = await service.findForApplication('app-1', recruiter);
 
-      expect(applicationsService.findOne).toHaveBeenCalledWith('app-1', recruiter);
+      expect(applicationsService.findOne).toHaveBeenCalledWith(
+        'app-1',
+        recruiter,
+      );
       expect(result).toEqual([baseInterview]);
     });
   });

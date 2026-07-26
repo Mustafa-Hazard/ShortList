@@ -1,4 +1,11 @@
-import { Body, Controller, Get, HttpCode, HttpStatus, Post } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Get,
+  HttpCode,
+  HttpStatus,
+  Post,
+} from '@nestjs/common';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 import { AuthService } from './auth.service';
 import { RegisterDto } from './dto/register.dto';
@@ -56,7 +63,9 @@ export class AuthController {
   @ApiBearerAuth()
   @Get('me')
   me(@CurrentUser() user: User) {
-    const { passwordHash, refreshTokenHash, ...safe } = user;
+    const safe = { ...user };
+    delete safe.passwordHash;
+    delete safe.refreshTokenHash;
     return safe;
   }
 }

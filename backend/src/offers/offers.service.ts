@@ -65,7 +65,7 @@ export class OffersService {
           startDate: dto.startDate,
           benefitsSummary: dto.benefitsSummary,
         });
-      } catch (err) {
+      } catch {
         // Degrade-don't-block: If AI drafting fails, offer creation succeeds with null draft.
         draftedLetter = null;
       }
@@ -102,7 +102,7 @@ export class OffersService {
           salary: saved.salary,
         },
       );
-    } catch (err) {
+    } catch {
       // Degrade-don't-block
     }
 
@@ -180,7 +180,7 @@ export class OffersService {
             candidateResponse: saved.candidateResponse,
           },
         );
-      } catch (err) {
+      } catch {
         // Degrade-don't-block
       }
     }
@@ -188,20 +188,13 @@ export class OffersService {
     return saved;
   }
 
-  async update(
-    id: string,
-    dto: UpdateOfferDto,
-    user: User,
-  ): Promise<Offer> {
+  async update(id: string, dto: UpdateOfferDto, user: User): Promise<Offer> {
     const offer = await this.getOwnedForStaff(id, user);
     Object.assign(offer, dto);
     return this.offersRepo.save(offer);
   }
 
-  async findForApplication(
-    applicationId: string,
-    user: User,
-  ): Promise<Offer> {
+  async findForApplication(applicationId: string, user: User): Promise<Offer> {
     const offer = await this.offersRepo.findOne({
       where: { applicationId },
       relations: { application: true },

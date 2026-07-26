@@ -122,7 +122,9 @@ Provide an objective evaluation as a single JSON object with no surrounding form
             ? extraction.educationLevel
             : undefined,
         lastRole:
-          typeof extraction.lastRole === 'string' ? extraction.lastRole : undefined,
+          typeof extraction.lastRole === 'string'
+            ? extraction.lastRole
+            : undefined,
       };
 
       const aiStrengths = Array.isArray(parsed.aiStrengths)
@@ -138,7 +140,7 @@ Provide an objective evaluation as a single JSON object with no surrounding form
         aiStrengths,
         aiGaps,
       };
-    } catch (err) {
+    } catch {
       this.logger.warn(`Failed to parse AI CV Scorer response: ${cleanText}`);
       return {
         aiScore: 50,

@@ -83,13 +83,18 @@ export class ApplicationsService {
     private notificationsService: NotificationsService,
   ) {}
 
-  async apply(dto: CreateApplicationDto, candidate: User): Promise<Application> {
+  async apply(
+    dto: CreateApplicationDto,
+    candidate: User,
+  ): Promise<Application> {
     // Reuses JobsService.findOne, which already throws 404 for anything
     // non-published when called as a candidate — so an application can
     // never be created against a draft/closed/archived posting.
     const posting = await this.jobsService.findOne(dto.jobPostingId, candidate);
     if (posting.status !== JobStatus.PUBLISHED) {
-      throw new BadRequestException('This job posting is not accepting applications');
+      throw new BadRequestException(
+        'This job posting is not accepting applications',
+      );
     }
 
     const application = this.applicationsRepo.create({
@@ -109,7 +114,9 @@ export class ApplicationsService {
         err instanceof QueryFailedError &&
         (err as any).driverError?.code === UNIQUE_VIOLATION
       ) {
-        throw new ConflictException('You have already applied to this job posting');
+        throw new ConflictException(
+          'You have already applied to this job posting',
+        );
       }
       throw err;
     }
@@ -179,7 +186,7 @@ export class ApplicationsService {
           newStage: target,
         },
       );
-    } catch (err) {
+    } catch {
       // Degrade-don't-block
     }
 
@@ -190,7 +197,10 @@ export class ApplicationsService {
     ids: string[],
     target: ApplicationStage,
     user: User,
-  ): Promise<{ succeeded: string[]; failed: { id: string; reason: string }[] }> {
+  ): Promise<{
+    succeeded: string[];
+    failed: { id: string; reason: string }[];
+  }> {
     const succeeded: string[] = [];
     const failed: { id: string; reason: string }[] = [];
 

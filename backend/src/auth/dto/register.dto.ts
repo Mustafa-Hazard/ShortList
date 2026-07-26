@@ -1,5 +1,12 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-import { IsEmail, IsEnum, IsOptional, IsString, IsUUID, MinLength } from 'class-validator';
+import {
+  IsEmail,
+  IsEnum,
+  IsOptional,
+  IsString,
+  IsUUID,
+  MinLength,
+} from 'class-validator';
 import { Role } from '../../common/enums/role.enum';
 
 export class RegisterDto {
@@ -35,7 +42,8 @@ export class RegisterDto {
   companyId?: string;
 
   @ApiPropertyOptional({
-    description: 'Required when role is admin — creates a new company owned by this admin',
+    description:
+      'Required when role is admin — creates a new company owned by this admin',
   })
   @IsOptional()
   @IsString()

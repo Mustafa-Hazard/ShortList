@@ -36,9 +36,13 @@ describe('NotificationsGateway', () => {
     };
     gateway.server = mockServer;
 
-    gateway.sendNotification('user-123', NotificationType.APPLICATION_STAGE_CHANGED, {
-      applicationId: 'app-1',
-    });
+    gateway.sendNotification(
+      'user-123',
+      NotificationType.APPLICATION_STAGE_CHANGED,
+      {
+        applicationId: 'app-1',
+      },
+    );
 
     expect(mockServer.to).toHaveBeenCalledWith('user:user-123');
     expect(mockServer.emit).toHaveBeenCalledWith(

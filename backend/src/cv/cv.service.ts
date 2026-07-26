@@ -11,7 +11,6 @@ import { readFile, unlink } from 'fs/promises';
 import { PDFParse } from 'pdf-parse';
 import { Cv } from './cv.entity';
 import { ApplicationsService } from '../applications/applications.service';
-import { Role } from '../common/enums/role.enum';
 import { User } from '../users/user.entity';
 
 const UNIQUE_VIOLATION = '23505';
@@ -38,7 +37,9 @@ export class CvService {
       candidate,
     );
     if (application.candidateId !== candidate.id) {
-      throw new ForbiddenException('You can only upload a CV to your own application');
+      throw new ForbiddenException(
+        'You can only upload a CV to your own application',
+      );
     }
 
     // Extraction failure (encrypted PDF, scanned image with no text layer,
@@ -93,7 +94,10 @@ export class CvService {
     return cv;
   }
 
-  async getFilePath(id: string, user: User): Promise<{ path: string; filename: string }> {
+  async getFilePath(
+    id: string,
+    user: User,
+  ): Promise<{ path: string; filename: string }> {
     const cv = await this.findOne(id, user);
     return { path: cv.storagePath, filename: cv.originalFilename };
   }

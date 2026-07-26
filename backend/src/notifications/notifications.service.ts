@@ -28,7 +28,7 @@ export class NotificationsService {
 
     try {
       this.notificationsGateway.sendNotification(userId, type, payload);
-    } catch (err) {
+    } catch {
       // Degrade-don't-block if WebSocket delivery fails
     }
 
@@ -54,6 +54,9 @@ export class NotificationsService {
   }
 
   async markAllAsRead(userId: string): Promise<void> {
-    await this.notificationsRepo.update({ userId, read: false }, { read: true });
+    await this.notificationsRepo.update(
+      { userId, read: false },
+      { read: true },
+    );
   }
 }
