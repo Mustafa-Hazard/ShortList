@@ -16,104 +16,104 @@ erDiagram
     APPLICATIONS ||--o| CV_DATA : "contains"
 
     COMPANIES {
-        uuid id PK
+        string id PK
         string name
         string domain
-        datetime createdAt
-        datetime updatedAt
+        string createdAt
+        string updatedAt
     }
 
     USERS {
-        uuid id PK
-        uuid companyId FK "nullable"
-        string email UK
+        string id PK
+        string companyId FK "nullable"
+        string email "Unique"
         string passwordHash
         string firstName
         string lastName
-        enum role "candidate | recruiter | hiring_manager | admin"
-        datetime createdAt
-        datetime updatedAt
+        string role "candidate | recruiter | hiring_manager | admin"
+        string createdAt
+        string updatedAt
     }
 
     JOB_POSTINGS {
-        uuid id PK
-        uuid companyId FK
+        string id PK
+        string companyId FK
         string title
         string department
-        enum type "full-time | part-time | contract"
-        enum status "draft | published | archived"
-        text description
-        text responsibilities
-        jsonb requiredSkills
+        string type "full-time | part-time | contract"
+        string status "draft | published | archived"
+        string description
+        string responsibilities
+        string requiredSkills
         int salaryMin
         int salaryMax
-        datetime createdAt
-        datetime updatedAt
+        string createdAt
+        string updatedAt
     }
 
     APPLICATIONS {
-        uuid id PK
-        uuid jobPostingId FK
-        uuid candidateId FK
-        enum stage "applied | screened | shortlisted | interview_scheduled | offer | hired | rejected"
-        text coverLetter
+        string id PK
+        string jobPostingId FK
+        string candidateId FK
+        string stage "applied | screened | shortlisted | interview_scheduled | offer | hired | rejected"
+        string coverLetter
         int yearsOfExperience
         int salaryExpectation
         int aiScore "nullable"
-        jsonb aiExtraction "nullable"
-        jsonb aiStrengths "nullable"
-        jsonb aiGaps "nullable"
-        datetime createdAt
-        datetime updatedAt
+        string aiExtraction "nullable"
+        string aiStrengths "nullable"
+        string aiGaps "nullable"
+        string createdAt
+        string updatedAt
     }
 
     CV_DATA {
-        uuid id PK
-        uuid applicationId FK UK
+        string id PK
+        string applicationId FK "Unique"
         string originalFilename
         string mimeType
         int fileSizeBytes
-        text rawTextContent
-        datetime createdAt
+        string rawTextContent
+        string createdAt
     }
 
     INTERVIEWS {
-        uuid id PK
-        uuid applicationId FK
-        uuid proposedById FK "nullable"
-        uuid hiringManagerId FK "nullable"
-        enum type "screening | technical | behavioral | executive"
-        enum status "proposed | confirmed | completed | cancelled"
-        timestamp_array proposedSlots
-        timestamp confirmedSlot "nullable"
-        jsonb questions "nullable"
-        text notes "nullable"
-        datetime createdAt
-        datetime updatedAt
+        string id PK
+        string applicationId FK
+        string proposedById FK "nullable"
+        string hiringManagerId FK "nullable"
+        string type "screening | technical | behavioral | executive"
+        string status "proposed | confirmed | completed | cancelled"
+        string proposedSlots
+        string confirmedSlot "nullable"
+        string questions "nullable"
+        string notes "nullable"
+        string createdAt
+        string updatedAt
     }
 
     OFFERS {
-        uuid id PK
-        uuid applicationId FK UK
-        uuid issuedById FK "nullable"
+        string id PK
+        string applicationId FK "Unique"
+        string issuedById FK "nullable"
         string roleTitle
         int salary
-        date startDate
-        text benefitsSummary
-        enum status "issued | accepted | rejected | negotiating"
-        text candidateResponse "nullable"
-        text draftedLetter "nullable"
+        string startDate
+        string benefitsSummary
+        string status "issued | accepted | rejected | negotiating"
+        string candidateResponse "nullable"
+        string draftedLetter "nullable"
         boolean letterApproved
-        datetime createdAt
-        datetime updatedAt
+        string createdAt
+        string updatedAt
     }
 
     NOTIFICATIONS {
-        uuid id PK
-        uuid userId FK
-        enum type "application_stage_changed | interview_proposed | interview_confirmed | interview_reminder | offer_issued | offer_responded"
-        jsonb payload
+        string id PK
+        string userId FK
+        string type "stage_changed | interview_proposed..."
+        string payload
         boolean read
-        datetime createdAt
+        string createdAt
     }
 ```
