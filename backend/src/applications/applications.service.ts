@@ -6,7 +6,7 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository, QueryFailedError } from 'typeorm';
+import { Repository, QueryFailedError, In } from 'typeorm';
 import { Application } from './application.entity';
 import { ApplicationStage } from '../common/enums/application-stage.enum';
 import { JobStatus } from '../common/enums/job.enum';
@@ -125,6 +125,7 @@ export class ApplicationsService {
   async findMine(candidate: User): Promise<Application[]> {
     return this.applicationsRepo.find({
       where: { candidateId: candidate.id },
+      relations: { candidate: true, jobPosting: true, cv: true },
       order: { createdAt: 'DESC' },
     });
   }
@@ -134,7 +135,17 @@ export class ApplicationsService {
     user: User,
   ): Promise<Application[]> {
     if (!query.jobPostingId) {
-      throw new BadRequestException('jobPostingId is required');
+      const jobs = await this.jobsService.findAll({}, user);
+      const jobIds = jobs.map((j) => j.id);
+      if (jobIds.length === 0) return [];
+      return this.applicationsRepo.find({
+        where: {
+          jobPostingId: In(jobIds),
+          ...(query.stage ? { stage: query.stage } : {}),
+        },
+        relations: { candidate: true, jobPosting: true, cv: true },
+        order: { aiScore: { direction: 'DESC', nulls: 'LAST' } as any },
+      });
     }
     // Confirms the posting belongs to the staff member's company — throws
     // 403/404 exactly as JobsController's own routes would.
@@ -145,13 +156,17 @@ export class ApplicationsService {
         jobPostingId: query.jobPostingId,
         ...(query.stage ? { stage: query.stage } : {}),
       },
+      relations: { candidate: true, jobPosting: true, cv: true },
       // Shortlist sorted by AI score by default (nulls last), per spec.
       order: { aiScore: { direction: 'DESC', nulls: 'LAST' } as any },
     });
   }
 
   async findOne(id: string, user: User): Promise<Application> {
-    const application = await this.applicationsRepo.findOne({ where: { id } });
+    const application = await this.applicationsRepo.findOne({
+      where: { id },
+      relations: { candidate: true, jobPosting: true, cv: true },
+    });
     if (!application) throw new NotFoundException('Application not found');
 
     if (user.role === Role.CANDIDATE) {
@@ -174,7 +189,8 @@ export class ApplicationsService {
     const application = await this.getOwnedForStaff(id, user);
     this.assertTransitionAllowed(application.stage, target, user.role);
     application.stage = target;
-    const saved = await this.applicationsRepo.save(application);
+    await this.applicationsRepo.save(application);
+    const saved = await this.findOne(id, user);
 
     try {
       await this.notificationsService.createAndSend(
@@ -225,7 +241,7 @@ export class ApplicationsService {
   async scoreApplication(id: string, user: User): Promise<Application> {
     const application = await this.applicationsRepo.findOne({
       where: { id },
-      relations: { jobPosting: true, cv: true },
+      relations: { candidate: true, jobPosting: true, cv: true },
     });
     if (!application) throw new NotFoundException('Application not found');
     await this.jobsService.findOne(application.jobPostingId, user);
@@ -243,7 +259,8 @@ export class ApplicationsService {
     application.aiStrengths = scoreResult.aiStrengths;
     application.aiGaps = scoreResult.aiGaps;
 
-    return this.applicationsRepo.save(application);
+    await this.applicationsRepo.save(application);
+    return this.findOne(id, user);
   }
 
   private assertTransitionAllowed(
@@ -263,7 +280,10 @@ export class ApplicationsService {
   }
 
   private async getOwnedForStaff(id: string, user: User): Promise<Application> {
-    const application = await this.applicationsRepo.findOne({ where: { id } });
+    const application = await this.applicationsRepo.findOne({
+      where: { id },
+      relations: { candidate: true, jobPosting: true, cv: true },
+    });
     if (!application) throw new NotFoundException('Application not found');
     // Throws 403/404 if this staff member's company doesn't own the posting.
     await this.jobsService.findOne(application.jobPostingId, user);

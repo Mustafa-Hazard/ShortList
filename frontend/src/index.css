@@ -9,6 +9,7 @@
   --bg-main: #0F1A24;         /* Ink-Navy background */
   --bg-panel: #14222E;        /* Blueprint panel surface */
   --bg-panel-hover: #1A2D3D;  /* Raised panel hover */
+  --bg-input: #0B131C;        /* Form input background */
   --fg-main: #E8E2D0;         /* Aged paper text */
   --fg-muted: #8FA2B3;        /* Technical label grey */
   --fg-dim: #546A7B;          /* Dim linework text */
@@ -29,6 +30,7 @@
   --bg-main: #F4F0E6;         /* Warm drafting paper cream */
   --bg-panel: #E7E1D3;        /* Solid drafting board panel */
   --bg-panel-hover: #DDD6C6;  /* Panel hover */
+  --bg-input: #FFFFFF;        /* Crisp white input background */
   --fg-main: #162432;         /* Deep ink-navy body text */
   --fg-muted: #576B7C;        /* Technical label grey */
   --fg-dim: #8596A6;          /* Dim label text */
@@ -273,7 +275,7 @@ code, pre, .font-mono, .mono-tag {
 .form-input, .form-select, .form-textarea {
   width: 100%;
   padding: 0.6rem 0.75rem;
-  background: #0B131C;
+  background: var(--bg-input);
   border: 1px solid var(--line-grey);
   border-radius: 2px;
   color: var(--fg-main);
@@ -281,6 +283,29 @@ code, pre, .font-mono, .mono-tag {
   font-size: 0.875rem;
   outline: none;
   transition: border-color 0.15s ease;
+}
+
+.form-input::file-selector-button {
+  background: var(--bg-panel);
+  border: 1px solid var(--line-grey);
+  color: var(--fg-main);
+  padding: 0.35rem 0.75rem;
+  margin-right: 1rem;
+  border-radius: 2px;
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.form-input::file-selector-button:hover {
+  background: var(--bg-panel-hover);
+  border-color: var(--accent-brass);
+}
+
+.form-input::placeholder, .form-textarea::placeholder {
+  color: var(--fg-muted);
+  opacity: 0.85;
 }
 
 .form-input:focus, .form-select:focus, .form-textarea:focus {

@@ -66,7 +66,7 @@ export function CandidateDashboard() {
         const formData = new FormData();
         formData.append('file', cvFile);
         formData.append('applicationId', application.id);
-        await apiClient.post('/cv/upload', formData, {
+        await apiClient.post(`/cv/${application.id}`, formData, {
           headers: { 'Content-Type': 'multipart/form-data' },
         });
       }

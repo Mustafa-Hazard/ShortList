@@ -106,6 +106,15 @@ export function RecruiterDashboard() {
     }
   };
 
+  const handleJobAction = async (jobId: string, action: 'publish' | 'close' | 'archive') => {
+    try {
+      await apiClient.post(`/jobs/${jobId}/${action}`);
+      fetchJobs();
+    } catch (err: any) {
+      alert(err.response?.data?.message || `Failed to ${action} job`);
+    }
+  };
+
   const handleTriggerCvScorer = async (appId: string) => {
     setScoring(true);
     try {
@@ -121,7 +130,7 @@ export function RecruiterDashboard() {
 
   const handleTransitionStage = async (appId: string, targetStage: string) => {
     try {
-      await apiClient.patch(`/applications/${appId}/stage`, { targetStage });
+      await apiClient.post(`/applications/${appId}/transition`, { stage: targetStage });
       fetchApplications();
       if (selectedApp?.id === appId) {
         setSelectedApp(null);
@@ -407,6 +416,36 @@ export function RecruiterDashboard() {
                 <p style={{ fontSize: '0.85rem', color: 'var(--fg-muted)', lineClamp: 4, WebkitLineClamp: 4, display: '-webkit-box', WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>
                   {job.responsibilities ? `${job.responsibilities} — ` : ''}{job.description}
                 </p>
+              </div>
+
+              <div style={{ marginTop: '1.25rem', paddingTop: '1rem', borderTop: '1px solid var(--line-grey)', display: 'flex', justifyContent: 'flex-end', gap: '0.5rem' }}>
+                {job.status === 'draft' && (
+                  <button
+                    type="button"
+                    className="btn btn-primary btn-sm"
+                    onClick={() => handleJobAction(job.id, 'publish')}
+                  >
+                    PUBLISH JOB 🚀
+                  </button>
+                )}
+                {job.status === 'published' && (
+                  <button
+                    type="button"
+                    className="btn btn-secondary btn-sm"
+                    onClick={() => handleJobAction(job.id, 'close')}
+                  >
+                    CLOSE JOB 🔒
+                  </button>
+                )}
+                {job.status === 'closed' && (
+                  <button
+                    type="button"
+                    className="btn btn-secondary btn-sm"
+                    onClick={() => handleJobAction(job.id, 'archive')}
+                  >
+                    ARCHIVE JOB 📦
+                  </button>
+                )}
               </div>
             </div>
           ))}

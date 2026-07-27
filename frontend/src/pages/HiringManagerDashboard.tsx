@@ -80,7 +80,7 @@ export function HiringManagerDashboard() {
 
   const handleTransitionStage = async (appId: string, targetStage: string) => {
     try {
-      await apiClient.patch(`/applications/${appId}/stage`, { targetStage });
+      await apiClient.post(`/applications/${appId}/transition`, { stage: targetStage });
       fetchApplications();
     } catch (err: any) {
       alert(err.response?.data?.message || 'Stage transition failed: Role permissions restricted.');
@@ -88,7 +88,7 @@ export function HiringManagerDashboard() {
   };
 
   const shortlistedApps = applications.filter(
-    (a) => a.stage === 'shortlisted' || a.stage === 'interview_scheduled' || a.stage === 'offer',
+    (a) => a.stage === 'screened' || a.stage === 'shortlisted' || a.stage === 'interview_scheduled' || a.stage === 'offer',
   );
 
   return (
@@ -155,6 +155,16 @@ export function HiringManagerDashboard() {
                   >
                     <FileCheck size={13} /> REVIEW & APPROVE OFFER
                   </button>
+
+                  {app.stage === 'screened' && (
+                    <button
+                      type="button"
+                      className="btn btn-primary btn-sm"
+                      onClick={() => handleTransitionStage(app.id, 'shortlisted')}
+                    >
+                      APPROVE FOR SHORTLIST <ArrowRight size={12} />
+                    </button>
+                  )}
 
                   {app.stage === 'shortlisted' && (
                     <button
