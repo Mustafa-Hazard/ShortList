@@ -1,15 +1,6 @@
-import {
-  Column,
-  CreateDateColumn,
-  Entity,
-  Index,
-  JoinColumn,
-  ManyToOne,
-  OneToMany,
-  OneToOne,
-  PrimaryGeneratedColumn,
-  UpdateDateColumn,
-} from 'typeorm';
+import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
+import { Document } from 'mongoose';
+import { randomUUID } from 'crypto';
 import { User } from '../users/user.entity';
 import { JobPosting } from '../jobs/job-posting.entity';
 import { Cv } from '../cv/cv.entity';
@@ -17,56 +8,74 @@ import { Interview } from '../interviews/interview.entity';
 import { Offer } from '../offers/offer.entity';
 import { ApplicationStage } from '../common/enums/application-stage.enum';
 
-@Entity('applications')
-@Index(['jobPostingId', 'candidateId'], { unique: true })
+export type ApplicationDocument = Application & Document;
+
+@Schema({
+  collection: 'applications',
+  timestamps: true,
+  toJSON: {
+    virtuals: true,
+    transform: (_doc, ret: any) => {
+      ret.id = ret._id;
+      delete ret._id;
+      delete ret.__v;
+      return ret;
+    },
+  },
+  toObject: {
+    virtuals: true,
+    transform: (_doc, ret: any) => {
+      ret.id = ret._id;
+      delete ret._id;
+      delete ret.__v;
+      return ret;
+    },
+  },
+})
 export class Application {
-  @PrimaryGeneratedColumn('uuid')
-  id: string;
+  @Prop({ type: String, default: () => randomUUID() })
+  _id: string;
 
-  @ManyToOne(() => JobPosting, (job) => job.applications, {
-    onDelete: 'CASCADE',
-  })
-  @JoinColumn({ name: 'jobPostingId' })
-  jobPosting: JobPosting;
+  get id(): string {
+    return this._id;
+  }
 
-  @Column()
+  @Prop({ type: String, required: true, ref: 'JobPosting', index: true })
   jobPostingId: string;
 
-  @ManyToOne(() => User, { onDelete: 'CASCADE' })
-  @JoinColumn({ name: 'candidateId' })
-  candidate: User;
+  jobPosting?: JobPosting;
 
-  @Column()
+  @Prop({ type: String, required: true, ref: 'User', index: true })
   candidateId: string;
 
-  @Column({ type: 'text', nullable: true })
+  candidate?: User;
+
+  @Prop({ type: String, default: null })
   coverLetter: string | null;
 
-  @Column({ type: 'float', nullable: true })
+  @Prop({ type: Number, default: null })
   yearsOfExperience: number | null;
 
-  @Column({ type: 'int', nullable: true })
+  @Prop({ type: Number, default: null })
   salaryExpectation: number | null;
 
-  @Column({ type: 'date', nullable: true })
+  @Prop({ type: String, default: null })
   availabilityDate: string | null;
 
-  @Column({
-    type: 'enum',
-    enum: ApplicationStage,
+  @Prop({
+    type: String,
+    enum: Object.values(ApplicationStage),
     default: ApplicationStage.APPLIED,
+    index: true,
   })
   stage: ApplicationStage;
 
-  @OneToOne(() => Cv, (cv) => cv.application)
-  cv: Cv;
+  cv?: Cv;
 
-  // --- AI Feature 2: CV Screening & Scorer output, cached on the application
-  // so the shortlist can sort by score without re-calling the AI each time. ---
-  @Column({ type: 'int', nullable: true })
+  @Prop({ type: Number, default: null })
   aiScore: number | null;
 
-  @Column({ type: 'jsonb', nullable: true })
+  @Prop({ type: Object, default: null })
   aiExtraction: {
     name?: string;
     yearsOfExperience?: number;
@@ -75,21 +84,53 @@ export class Application {
     lastRole?: string;
   } | null;
 
-  @Column({ type: 'text', array: true, nullable: true })
+  @Prop({ type: [String], default: null })
   aiStrengths: string[] | null;
 
-  @Column({ type: 'text', array: true, nullable: true })
+  @Prop({ type: [String], default: null })
   aiGaps: string[] | null;
 
-  @OneToMany(() => Interview, (interview) => interview.application)
-  interviews: Interview[];
+  interviews?: Interview[];
+  offer?: Offer;
 
-  @OneToOne(() => Offer, (offer) => offer.application)
-  offer: Offer;
-
-  @CreateDateColumn()
   createdAt: Date;
-
-  @UpdateDateColumn()
   updatedAt: Date;
 }
+
+export const ApplicationSchema = SchemaFactory.createForClass(Application);
+
+ApplicationSchema.index({ jobPostingId: 1, candidateId: 1 }, { unique: true });
+
+ApplicationSchema.virtual('jobPosting', {
+  ref: 'JobPosting',
+  localField: 'jobPostingId',
+  foreignField: '_id',
+  justOne: true,
+});
+
+ApplicationSchema.virtual('candidate', {
+  ref: 'User',
+  localField: 'candidateId',
+  foreignField: '_id',
+  justOne: true,
+});
+
+ApplicationSchema.virtual('cv', {
+  ref: 'Cv',
+  localField: '_id',
+  foreignField: 'applicationId',
+  justOne: true,
+});
+
+ApplicationSchema.virtual('interviews', {
+  ref: 'Interview',
+  localField: '_id',
+  foreignField: 'applicationId',
+});
+
+ApplicationSchema.virtual('offer', {
+  ref: 'Offer',
+  localField: '_id',
+  foreignField: 'applicationId',
+  justOne: true,
+});

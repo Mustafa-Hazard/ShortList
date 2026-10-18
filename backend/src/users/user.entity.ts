@@ -1,58 +1,78 @@
-import {
-  Column,
-  CreateDateColumn,
-  Entity,
-  Index,
-  JoinColumn,
-  ManyToOne,
-  PrimaryGeneratedColumn,
-  UpdateDateColumn,
-} from 'typeorm';
+import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
+import { Document } from 'mongoose';
+import { randomUUID } from 'crypto';
 import { Exclude } from 'class-transformer';
 import { Role } from '../common/enums/role.enum';
 import { Company } from '../companies/company.entity';
 
-@Entity('users')
-export class User {
-  @PrimaryGeneratedColumn('uuid')
-  id: string;
+export type UserDocument = User & Document;
 
-  @Index({ unique: true })
-  @Column()
+@Schema({
+  collection: 'users',
+  timestamps: true,
+  toJSON: {
+    virtuals: true,
+    transform: (_doc, ret: any) => {
+      ret.id = ret._id;
+      delete ret._id;
+      delete ret.__v;
+      delete ret.passwordHash;
+      delete ret.refreshTokenHash;
+      return ret;
+    },
+  },
+  toObject: {
+    virtuals: true,
+    transform: (_doc, ret: any) => {
+      ret.id = ret._id;
+      delete ret._id;
+      delete ret.__v;
+      return ret;
+    },
+  },
+})
+export class User {
+  @Prop({ type: String, default: () => randomUUID() })
+  _id: string;
+
+  get id(): string {
+    return this._id;
+  }
+
+  @Prop({ required: true, unique: true, lowercase: true, trim: true })
   email: string;
 
   @Exclude()
-  @Column()
+  @Prop({ required: true })
   passwordHash: string;
 
-  @Column()
+  @Prop({ required: true })
   firstName: string;
 
-  @Column()
+  @Prop({ required: true })
   lastName: string;
 
-  @Column({ type: 'enum', enum: Role, default: Role.CANDIDATE })
+  @Prop({ type: String, enum: Object.values(Role), default: Role.CANDIDATE })
   role: Role;
 
-  // Candidates don't belong to a company. Recruiters, hiring managers and
-  // admins are scoped to the company they work for.
-  @ManyToOne(() => Company, (company) => company.users, { nullable: true })
-  @JoinColumn({ name: 'companyId' })
-  company: Company | null;
-
-  @Column({ nullable: true })
+  @Prop({ type: String, ref: 'Company', default: null })
   companyId: string | null;
 
-  // Hash of the currently-valid refresh token (bcrypt), so refresh tokens
-  // can be revoked (logout, password change) instead of being valid until
-  // expiry no matter what. Never serialised to the client.
+  company?: Company | null;
+
   @Exclude()
-  @Column({ nullable: true })
+  @Prop({ type: String, default: null })
   refreshTokenHash: string | null;
 
-  @CreateDateColumn()
   createdAt: Date;
-
-  @UpdateDateColumn()
   updatedAt: Date;
 }
+
+export const UserSchema = SchemaFactory.createForClass(User);
+
+UserSchema.virtual('company', {
+  ref: 'Company',
+  localField: 'companyId',
+  foreignField: '_id',
+  justOne: true,
+});

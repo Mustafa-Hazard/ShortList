@@ -1,68 +1,102 @@
-import {
-  Column,
-  CreateDateColumn,
-  Entity,
-  JoinColumn,
-  ManyToOne,
-  OneToOne,
-  PrimaryGeneratedColumn,
-  UpdateDateColumn,
-} from 'typeorm';
+import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
+import { Document } from 'mongoose';
+import { randomUUID } from 'crypto';
 import { Application } from '../applications/application.entity';
 import { User } from '../users/user.entity';
 import { OfferStatus } from '../common/enums/offer-status.enum';
 
-@Entity('offers')
+export type OfferDocument = Offer & Document;
+
+@Schema({
+  collection: 'offers',
+  timestamps: true,
+  toJSON: {
+    virtuals: true,
+    transform: (_doc, ret: any) => {
+      ret.id = ret._id;
+      delete ret._id;
+      delete ret.__v;
+      return ret;
+    },
+  },
+  toObject: {
+    virtuals: true,
+    transform: (_doc, ret: any) => {
+      ret.id = ret._id;
+      delete ret._id;
+      delete ret.__v;
+      return ret;
+    },
+  },
+})
 export class Offer {
-  @PrimaryGeneratedColumn('uuid')
-  id: string;
+  @Prop({ type: String, default: () => randomUUID() })
+  _id: string;
 
-  @OneToOne(() => Application, (application) => application.offer, {
-    onDelete: 'CASCADE',
+  get id(): string {
+    return this._id;
+  }
+
+  @Prop({
+    type: String,
+    required: true,
+    unique: true,
+    ref: 'Application',
+    index: true,
   })
-  @JoinColumn({ name: 'applicationId' })
-  application: Application;
-
-  @Column()
   applicationId: string;
 
-  @ManyToOne(() => User, { onDelete: 'SET NULL', nullable: true })
-  @JoinColumn({ name: 'issuedById' })
-  issuedBy: User | null;
+  application?: Application;
 
-  @Column({ nullable: true })
+  @Prop({ type: String, ref: 'User', default: null })
   issuedById: string | null;
 
-  @Column()
+  issuedBy?: User | null;
+
+  @Prop({ required: true })
   roleTitle: string;
 
-  @Column({ type: 'int' })
+  @Prop({ type: Number, required: true })
   salary: number;
 
-  @Column({ type: 'date' })
+  @Prop({ type: String, required: true })
   startDate: string;
 
-  @Column({ type: 'text' })
+  @Prop({ required: true })
   benefitsSummary: string;
 
-  @Column({ type: 'enum', enum: OfferStatus, default: OfferStatus.ISSUED })
+  @Prop({
+    type: String,
+    enum: Object.values(OfferStatus),
+    default: OfferStatus.ISSUED,
+  })
   status: OfferStatus;
 
-  // Free-text counter-offer from the candidate, if they negotiate.
-  @Column({ type: 'text', nullable: true })
+  @Prop({ type: String, default: null })
   candidateResponse: string | null;
 
-  // AI Feature 4 (bonus): the drafted letter body, reviewed and approved by
-  // the recruiter before it's ever surfaced to the candidate.
-  @Column({ type: 'text', nullable: true })
+  @Prop({ type: String, default: null })
   draftedLetter: string | null;
 
-  @Column({ default: false })
+  @Prop({ type: Boolean, default: false })
   letterApproved: boolean;
 
-  @CreateDateColumn()
   createdAt: Date;
-
-  @UpdateDateColumn()
   updatedAt: Date;
 }
+
+export const OfferSchema = SchemaFactory.createForClass(Offer);
+
+OfferSchema.virtual('application', {
+  ref: 'Application',
+  localField: 'applicationId',
+  foreignField: '_id',
+  justOne: true,
+});
+
+OfferSchema.virtual('issuedBy', {
+  ref: 'User',
+  localField: 'issuedById',
+  foreignField: '_id',
+  justOne: true,
+});
