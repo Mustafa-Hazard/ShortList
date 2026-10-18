@@ -37,13 +37,23 @@ async function bootstrap() {
     .map((o) => o.trim())
     .filter(Boolean);
 
+  if (process.env.VERCEL_URL) {
+    configuredOrigins.push(`https://${process.env.VERCEL_URL}`);
+  }
+  if (process.env.VERCEL_PROJECT_PRODUCTION_URL) {
+    configuredOrigins.push(`https://${process.env.VERCEL_PROJECT_PRODUCTION_URL}`);
+  }
+
   app.enableCors({
     origin: (requestOrigin, callback) => {
       // Allow requests with no origin (e.g. mobile apps, curl, server-to-server)
       if (!requestOrigin) {
         return callback(null, true);
       }
-      if (configuredOrigins.includes(requestOrigin)) {
+      if (
+        configuredOrigins.includes(requestOrigin) ||
+        (process.env.VERCEL && requestOrigin.endsWith('.vercel.app'))
+      ) {
         return callback(null, true);
       }
       return callback(

@@ -30,7 +30,11 @@ export const useNotificationStore = create<NotificationState>((set, get) => ({
   connectSocket: (userId: string) => {
     if (get().socket) return;
     const token = localStorage.getItem('token');
-    const socket = io('http://localhost:3000', {
+    const socketUrl =
+      import.meta.env.VITE_WS_URL ||
+      import.meta.env.VITE_API_URL?.replace(/\/api\/?$/, '') ||
+      (typeof window !== 'undefined' ? window.location.origin : 'http://localhost:3000');
+    const socket = io(socketUrl, {
       auth: { token },
       query: { userId },
       transports: ['websocket', 'polling'],
