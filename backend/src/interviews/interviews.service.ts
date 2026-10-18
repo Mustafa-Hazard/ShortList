@@ -4,10 +4,13 @@ import {
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
-import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
-import { Interview } from './interview.entity';
-import { Application } from '../applications/application.entity';
+import { InjectModel } from '@nestjs/mongoose';
+import { Model } from 'mongoose';
+import { Interview, InterviewDocument } from './interview.entity';
+import {
+  Application,
+  ApplicationDocument,
+} from '../applications/application.entity';
 import { User } from '../users/user.entity';
 import { Role } from '../common/enums/role.enum';
 import { InterviewStatus } from '../common/enums/interview.enum';
@@ -23,10 +26,10 @@ import { UpdateInterviewStatusDto } from './dto/update-interview-status.dto';
 @Injectable()
 export class InterviewsService {
   constructor(
-    @InjectRepository(Interview)
-    private interviewsRepo: Repository<Interview>,
-    @InjectRepository(Application)
-    private applicationsRepo: Repository<Application>,
+    @InjectModel(Interview.name)
+    private interviewModel: Model<InterviewDocument>,
+    @InjectModel(Application.name)
+    private applicationModel: Model<ApplicationDocument>,
     private jobsService: JobsService,
     private applicationsService: ApplicationsService,
     private questionSuggesterService: QuestionSuggesterService,
@@ -34,15 +37,14 @@ export class InterviewsService {
   ) {}
 
   async schedule(dto: ScheduleInterviewDto, user: User): Promise<Interview> {
-    const application = await this.applicationsRepo.findOne({
-      where: { id: dto.applicationId },
-    });
+    const application = await this.applicationModel
+      .findById(dto.applicationId)
+      .exec();
     if (!application) throw new NotFoundException('Application not found');
 
-    // Confirm staff user belongs to the company owning this job posting
     await this.jobsService.findOne(application.jobPostingId, user);
 
-    const interview = this.interviewsRepo.create({
+    const interview = await this.interviewModel.create({
       applicationId: dto.applicationId,
       proposedById: user.id,
       hiringManagerId: dto.hiringManagerId ?? null,
@@ -52,24 +54,22 @@ export class InterviewsService {
       questions: [],
     });
 
-    const saved = await this.interviewsRepo.save(interview);
-
     try {
       await this.notificationsService.createAndSend(
         application.candidateId,
         NotificationType.INTERVIEW_PROPOSED,
         {
-          interviewId: saved.id,
-          applicationId: saved.applicationId,
-          type: saved.type,
-          proposedSlots: saved.proposedSlots,
+          interviewId: interview.id,
+          applicationId: interview.applicationId,
+          type: interview.type,
+          proposedSlots: interview.proposedSlots,
         },
       );
     } catch {
       // Degrade-don't-block
     }
 
-    return saved;
+    return interview.toObject();
   }
 
   async confirmSlot(
@@ -77,32 +77,32 @@ export class InterviewsService {
     dto: ConfirmSlotDto,
     candidate: User,
   ): Promise<Interview> {
-    const interview = await this.interviewsRepo.findOne({
-      where: { id },
-      relations: { application: true },
-    });
+    const interview = await this.interviewModel
+      .findById(id)
+      .populate('application')
+      .exec();
     if (!interview) throw new NotFoundException('Interview not found');
 
-    if (interview.application.candidateId !== candidate.id) {
+    const appCandidateId = (interview.application as any)?.candidateId;
+    if (appCandidateId !== candidate.id) {
       throw new ForbiddenException(
         'You do not have access to confirm this interview',
       );
     }
 
-    const confirmedDate = new Date(dto.confirmedSlot);
-    const isProposedSlot = interview.proposedSlots.some(
-      (slot) => new Date(slot).getTime() === confirmedDate.getTime(),
+    const slot = new Date(dto.confirmedSlot);
+    const validSlot = interview.proposedSlots.some(
+      (s) => new Date(s).getTime() === slot.getTime(),
     );
-
-    if (!isProposedSlot) {
+    if (!validSlot) {
       throw new BadRequestException(
-        'Confirmed slot must match one of the recruiter proposed time slots',
+        'Confirmed slot must be one of the proposed slots',
       );
     }
 
-    interview.confirmedSlot = confirmedDate;
+    interview.confirmedSlot = slot;
     interview.status = InterviewStatus.CONFIRMED;
-    const saved = await this.interviewsRepo.save(interview);
+    await interview.save();
 
     if (interview.proposedById) {
       try {
@@ -110,9 +110,9 @@ export class InterviewsService {
           interview.proposedById,
           NotificationType.INTERVIEW_CONFIRMED,
           {
-            interviewId: saved.id,
-            applicationId: saved.applicationId,
-            confirmedSlot: confirmedDate,
+            interviewId: interview.id,
+            applicationId: interview.applicationId,
+            confirmedSlot: interview.confirmedSlot,
           },
         );
       } catch {
@@ -120,7 +120,7 @@ export class InterviewsService {
       }
     }
 
-    return saved;
+    return interview.toObject();
   }
 
   async updateStatus(
@@ -130,73 +130,88 @@ export class InterviewsService {
   ): Promise<Interview> {
     const interview = await this.getOwnedForStaff(id, user);
     interview.status = dto.status;
-    return this.interviewsRepo.save(interview);
+    await interview.save();
+    return interview.toObject();
   }
 
   async generateQuestions(id: string, user: User): Promise<Interview> {
-    const interview = await this.interviewsRepo.findOne({
-      where: { id },
-      relations: {
-        application: {
-          jobPosting: true,
-          cv: true,
-        },
-      },
-    });
-    if (!interview) throw new NotFoundException('Interview not found');
-    await this.jobsService.findOne(interview.application.jobPostingId, user);
+    const interview = await this.getOwnedForStaff(id, user);
+    const application = await this.applicationsService.findOne(
+      interview.applicationId,
+      user,
+    );
 
-    const app = interview.application;
     const questions = await this.questionSuggesterService.generateQuestions({
-      jobPosting: app.jobPosting,
-      cvText: app.cv?.extractedText ?? null,
-      coverLetter: app.coverLetter,
-      aiStrengths: app.aiStrengths,
-      aiGaps: app.aiGaps,
+      jobPosting: application.jobPosting as any,
+      cvText: application.cv?.extractedText ?? null,
+      coverLetter: application.coverLetter,
+      aiStrengths: application.aiStrengths,
+      aiGaps: application.aiGaps,
       type: interview.type,
     });
 
     interview.questions = questions;
-    return this.interviewsRepo.save(interview);
+    await interview.save();
+    return interview.toObject();
+  }
+
+  async updateQuestions(
+    id: string,
+    questions: any[],
+    user: User,
+  ): Promise<Interview> {
+    const interview = await this.getOwnedForStaff(id, user);
+    interview.questions = questions;
+    await interview.save();
+    return interview.toObject();
   }
 
   async findForApplication(
     applicationId: string,
     user: User,
   ): Promise<Interview[]> {
-    // Reuses ApplicationsService.findOne to verify company/candidate access
     await this.applicationsService.findOne(applicationId, user);
-    return this.interviewsRepo.find({
-      where: { applicationId },
-      order: { createdAt: 'DESC' },
-    });
+    return this.interviewModel
+      .find({ applicationId })
+      .populate('application')
+      .populate('proposedBy')
+      .populate('hiringManager')
+      .exec();
   }
 
   async findOne(id: string, user: User): Promise<Interview> {
-    const interview = await this.interviewsRepo.findOne({
-      where: { id },
-      relations: { application: true },
-    });
+    const interview = await this.interviewModel
+      .findById(id)
+      .populate('application')
+      .populate('proposedBy')
+      .populate('hiringManager')
+      .exec();
     if (!interview) throw new NotFoundException('Interview not found');
 
     if (user.role === Role.CANDIDATE) {
-      if (interview.application.candidateId !== user.id) {
+      const appCandidateId = (interview.application as any)?.candidateId;
+      if (appCandidateId !== user.id) {
         throw new NotFoundException('Interview not found');
       }
       return interview;
     }
 
-    await this.jobsService.findOne(interview.application.jobPostingId, user);
+    const appJobPostingId = (interview.application as any)?.jobPostingId;
+    await this.jobsService.findOne(appJobPostingId, user);
     return interview;
   }
 
-  private async getOwnedForStaff(id: string, user: User): Promise<Interview> {
-    const interview = await this.interviewsRepo.findOne({
-      where: { id },
-      relations: { application: true },
-    });
+  private async getOwnedForStaff(
+    id: string,
+    user: User,
+  ): Promise<InterviewDocument> {
+    const interview = await this.interviewModel
+      .findById(id)
+      .populate('application')
+      .exec();
     if (!interview) throw new NotFoundException('Interview not found');
-    await this.jobsService.findOne(interview.application.jobPostingId, user);
+    const appJobPostingId = (interview.application as any)?.jobPostingId;
+    await this.jobsService.findOne(appJobPostingId, user);
     return interview;
   }
 }

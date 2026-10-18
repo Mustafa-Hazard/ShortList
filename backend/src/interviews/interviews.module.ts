@@ -1,7 +1,10 @@
 import { Module } from '@nestjs/common';
-import { TypeOrmModule } from '@nestjs/typeorm';
-import { Interview } from './interview.entity';
-import { Application } from '../applications/application.entity';
+import { MongooseModule } from '@nestjs/mongoose';
+import { Interview, InterviewSchema } from './interview.entity';
+import {
+  Application,
+  ApplicationSchema,
+} from '../applications/application.entity';
 import { InterviewsService } from './interviews.service';
 import { InterviewsController } from './interviews.controller';
 import { QuestionSuggesterService } from './question-suggester.service';
@@ -12,7 +15,10 @@ import { NotificationsModule } from '../notifications/notifications.module';
 
 @Module({
   imports: [
-    TypeOrmModule.forFeature([Interview, Application]),
+    MongooseModule.forFeature([
+      { name: Interview.name, schema: InterviewSchema },
+      { name: Application.name, schema: ApplicationSchema },
+    ]),
     JobsModule,
     ApplicationsModule,
     AiProxyModule,
