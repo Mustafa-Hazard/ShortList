@@ -2,11 +2,20 @@ import { NestFactory } from '@nestjs/core';
 import { ValidationPipe } from '@nestjs/common';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import { ConfigService } from '@nestjs/config';
+import helmet from 'helmet';
+import { json, urlencoded } from 'express';
 import { AppModule } from './app.module';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
   const config = app.get(ConfigService);
+
+  // Security headers
+  app.use(helmet());
+
+  // Request body size limits
+  app.use(json({ limit: '1mb' }));
+  app.use(urlencoded({ extended: true, limit: '1mb' }));
 
   app.setGlobalPrefix('api');
 
@@ -18,9 +27,29 @@ async function bootstrap() {
     }),
   );
 
+  // Strict CORS allow-list (no wildcard * with credentials)
+  const configuredOrigins = (config.get<string>('CORS_ORIGIN') || 'http://localhost:5173')
+    .split(',')
+    .map((o) => o.trim())
+    .filter(Boolean);
+
   app.enableCors({
-    origin: config.get<string>('CORS_ORIGIN', 'http://localhost:5173'),
+    origin: (requestOrigin, callback) => {
+      // Allow requests with no origin (e.g. mobile apps, curl, server-to-server)
+      if (!requestOrigin) {
+        return callback(null, true);
+      }
+      if (configuredOrigins.includes(requestOrigin)) {
+        return callback(null, true);
+      }
+      return callback(
+        new Error(`CORS policy violation: Origin ${requestOrigin} is not in the allow-list`),
+        false,
+      );
+    },
     credentials: true,
+    methods: ['GET', 'HEAD', 'PUT', 'PATCH', 'POST', 'DELETE', 'OPTIONS'],
+    allowedHeaders: ['Content-Type', 'Authorization', 'Accept'],
   });
 
   const swaggerConfig = new DocumentBuilder()
