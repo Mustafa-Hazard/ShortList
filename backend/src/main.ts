@@ -1,3 +1,4 @@
+import { HttpExceptionFilter } from './common/filters/http-exception.filter';
 import { NestFactory } from '@nestjs/core';
 import { ValidationPipe } from '@nestjs/common';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
@@ -14,6 +15,7 @@ async function bootstrap() {
   app.use(helmet());
 
   // Request body size limits
+  app.useGlobalFilters(new HttpExceptionFilter());
   app.use(json({ limit: '1mb' }));
   app.use(urlencoded({ extended: true, limit: '1mb' }));
 

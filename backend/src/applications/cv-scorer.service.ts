@@ -31,27 +31,10 @@ export class CvScorerService {
 
   async score(input: CvScorerInput): Promise<CvScorerResult> {
     const prompt = this.buildPrompt(input);
-    try {
-      const rawText = await this.aiProxyService.generateContent(prompt, {
-        temperature: 0.2,
-      });
-      return this.parseResponse(rawText);
-    } catch (err: any) {
-      this.logger.warn(
-        'AI generation failed: ' +
-          (err?.message || err) +
-          '. Applying degrade-dont-block fallback score.',
-      );
-      return {
-        aiScore: 78,
-        aiExtraction: {
-          name: 'Applicant',
-          topSkills: ['Full Stack Development', 'TypeScript'],
-        },
-        aiStrengths: ['Experience aligned with core responsibilities'],
-        aiGaps: ['Review live CV attachment for verified credentials'],
-      };
-    }
+    const rawText = await this.aiProxyService.generateContent(prompt, {
+      temperature: 0.2,
+    });
+    return this.parseResponse(rawText);
   }
 
   private buildPrompt(input: CvScorerInput): string {
@@ -166,7 +149,7 @@ export class CvScorerService {
         aiGaps,
       };
     } catch {
-      this.logger.warn('Failed to parse AI CV Scorer response: ' + cleanText);
+      this.logger.warn('Failed to parse AI CV Scorer response JSON structure');
       return {
         aiScore: 50,
         aiExtraction: {},
