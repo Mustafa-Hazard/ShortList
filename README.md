@@ -4,7 +4,7 @@ Hiring and applicant tracking web app with PDF resume parsing, AI evaluation, an
 
 *Formerly CogniHire.*
 
-<!-- add screenshot here -->
+![ShortList Preview](docs/shortlist.png)
 
 ## About
 ShortList is a full-stack applicant tracking system built to streamline recruitment workflows for hiring teams and candidates. Recruiters can post vacancies, review submitted applications, and track candidates across structured hiring stages. The backend validates uploaded PDF resumes, extracts text, and evaluates candidate qualifications against role requirements using Google Gemini (with an offline mock fallback for local testing). Candidates can browse open roles, apply with their resumes, and receive real-time notifications as their application progresses.
