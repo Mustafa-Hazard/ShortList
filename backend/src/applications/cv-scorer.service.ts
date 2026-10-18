@@ -38,7 +38,9 @@ export class CvScorerService {
       return this.parseResponse(rawText);
     } catch (err: any) {
       this.logger.warn(
-        'AI generation failed: ' + (err?.message || err) + '. Applying degrade-dont-block fallback score.'
+        'AI generation failed: ' +
+          (err?.message || err) +
+          '. Applying degrade-dont-block fallback score.',
       );
       return {
         aiScore: 78,
@@ -69,16 +71,34 @@ export class CvScorerService {
     return (
       'You are an expert technical recruiter. Evaluate the following candidate application against the job posting requirements and output a JSON object only.\n\n' +
       'JOB POSTING:\n' +
-      'Title: ' + (job.title ?? 'N/A') + '\n' +
-      'Department: ' + (job.department ?? 'N/A') + '\n' +
-      'Required Skills: ' + requiredSkillsStr + '\n' +
-      'Core Responsibilities: ' + (job.responsibilities ?? 'N/A') + '\n' +
-      'Description: ' + (job.description ?? 'N/A') + '\n\n' +
+      'Title: ' +
+      (job.title ?? 'N/A') +
+      '\n' +
+      'Department: ' +
+      (job.department ?? 'N/A') +
+      '\n' +
+      'Required Skills: ' +
+      requiredSkillsStr +
+      '\n' +
+      'Core Responsibilities: ' +
+      (job.responsibilities ?? 'N/A') +
+      '\n' +
+      'Description: ' +
+      (job.description ?? 'N/A') +
+      '\n\n' +
       'CANDIDATE APPLICATION DATA:\n' +
-      'Years of Experience: ' + (input.yearsOfExperience ?? 'Not specified') + '\n' +
-      'Salary Expectation: ' + (input.salaryExpectation ?? 'Not specified') + '\n' +
-      'Cover Letter: ' + coverLetterStr + '\n' +
-      'CV Extracted Text: ' + cvTextStr + '\n\n' +
+      'Years of Experience: ' +
+      (input.yearsOfExperience ?? 'Not specified') +
+      '\n' +
+      'Salary Expectation: ' +
+      (input.salaryExpectation ?? 'Not specified') +
+      '\n' +
+      'Cover Letter: ' +
+      coverLetterStr +
+      '\n' +
+      'CV Extracted Text: ' +
+      cvTextStr +
+      '\n\n' +
       'INSTRUCTIONS:\n' +
       'Provide an objective evaluation as a single JSON object with no surrounding formatting or markdown fences. The JSON object MUST follow this schema strictly:\n' +
       '{\n' +

@@ -3,16 +3,16 @@ version: "3.9"
 services:
   db:
     image: mongo:7.0
-    container_name: cognihire-mongo
+    container_name: shortlist-mongo
     restart: unless-stopped
     environment:
-      MONGO_INITDB_ROOT_USERNAME: cognihire
-      MONGO_INITDB_ROOT_PASSWORD: cognihire
-      MONGO_INITDB_DATABASE: cognihire
+      MONGO_INITDB_ROOT_USERNAME: shortlist
+      MONGO_INITDB_ROOT_PASSWORD: shortlist
+      MONGO_INITDB_DATABASE: shortlist
     ports:
       - "27017:27017"
     volumes:
-      - cognihire-mongo-data:/data/db
+      - shortlist-mongo-data:/data/db
     healthcheck:
       test: ["CMD", "mongosh", "--eval", "db.adminCommand('ping')"]
       interval: 5s
@@ -23,7 +23,7 @@ services:
     build:
       context: ./backend
       dockerfile: Dockerfile
-    container_name: cognihire-backend
+    container_name: shortlist-backend
     restart: unless-stopped
     depends_on:
       db:
@@ -31,7 +31,7 @@ services:
     env_file:
       - ./backend/.env
     environment:
-      MONGODB_URI: mongodb://cognihire:cognihire@db:27017/cognihire?authSource=admin
+      MONGODB_URI: mongodb://shortlist:shortlist@db:27017/shortlist?authSource=admin
       PORT: 3000
     ports:
       - "3000:3000"
@@ -39,4 +39,4 @@ services:
       sh -c "npm run start:prod"
 
 volumes:
-  cognihire-mongo-data:
+  shortlist-mongo-data:

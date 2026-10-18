@@ -4,7 +4,7 @@ import * as bcrypt from 'bcrypt';
 import { randomUUID } from 'crypto';
 
 async function seed() {
-  const uri = process.env.MONGODB_URI || 'mongodb://localhost:27017/cognihire';
+  const uri = process.env.MONGODB_URI || 'mongodb://localhost:27017/shortlist';
   console.log(`Connecting to MongoDB at ${uri}...`);
   await mongoose.connect(uri);
 

@@ -1,4 +1,4 @@
-name: TalentBridge CI
+name: ShortList CI
 
 on:
   push:

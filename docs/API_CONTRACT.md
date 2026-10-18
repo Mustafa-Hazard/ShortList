@@ -1,6 +1,6 @@
-# CogniHire — API Contract Specification
+# ShortList — API Contract Specification
 
-This document details the REST API endpoints, WebSocket gateway events, request DTOs, response schemas, and authentication rules for CogniHire.
+This document details the REST API endpoints, WebSocket gateway events, request DTOs, response schemas, and authentication rules for ShortList.
 
 ---
 

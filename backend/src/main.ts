@@ -24,7 +24,7 @@ async function bootstrap() {
   });
 
   const swaggerConfig = new DocumentBuilder()
-    .setTitle('TalentBridge API')
+    .setTitle('ShortList API')
     .setDescription('AI-Augmented SME Recruitment Platform')
     .setVersion('0.1')
     .addBearerAuth()
@@ -36,7 +36,7 @@ async function bootstrap() {
   await app.listen(port);
   // eslint-disable-next-line no-console
   console.log(
-    `TalentBridge API running on http://localhost:${port}/api (docs at /api/docs)`,
+    `ShortList API running on http://localhost:${port}/api (docs at /api/docs)`,
   );
 }
 bootstrap();

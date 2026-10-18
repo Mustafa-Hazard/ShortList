@@ -1,10 +1,12 @@
 <div align="center">
 
-# 🧠 CogniHire
+# 🧠 ShortList
+
+Formerly CogniHire.
 
 ### *Next-Generation AI-Augmented SME Recruitment Engine*
 
-[![Build & Tests](https://img.shields.io/badge/Build%20%26%20Tests-100%25%20Passing-brightgreen?style=for-the-badge&logo=github-actions)](https://github.com/Mustafa-Hazard/CogniHire)
+[![Build & Tests](https://img.shields.io/badge/Build%20%26%20Tests-100%25%20Passing-brightgreen?style=for-the-badge&logo=github-actions)](https://github.com/Mustafa-Hazard/ShortList)
 [![NestJS](https://img.shields.io/badge/Backend-NestJS%20v10-E0234E?style=for-the-badge&logo=nestjs)](https://nestjs.com/)
 [![React](https://img.shields.io/badge/Frontend-React%20v18%20%2B%20Vite-61DAFB?style=for-the-badge&logo=react)](https://react.dev/)
 [![TypeScript](https://img.shields.io/badge/Language-TypeScript%20v5-3178C6?style=for-the-badge&logo=typescript)](https://www.typescriptlang.org/)
@@ -28,9 +30,9 @@
 
 ## 📖 Overview
 
-**CogniHire** is an intelligent, full-stack recruitment platform engineered specifically to eliminate the slowest bottlenecks in SME (Small and Medium Enterprise) hiring.
+**ShortList** is an intelligent, full-stack recruitment platform engineered specifically to eliminate the slowest bottlenecks in SME (Small and Medium Enterprise) hiring.
 
-In traditional SME recruitment, HR teams waste dozens of hours writing job listings, manually reading CVs, preparing generic interview questions, and drafting offer letters. **CogniHire automates these tasks with an integrated Google Gemini 1.5 Flash AI Engine**, while enforcing a strict **multi-tenant role-based pipeline**, real-time **WebSocket updates**, and complete **data privacy compliance**.
+In traditional SME recruitment, HR teams waste dozens of hours writing job listings, manually reading CVs, preparing generic interview questions, and drafting offer letters. **ShortList automates these tasks with an integrated Google Gemini 1.5 Flash AI Engine**, while enforcing a strict **multi-tenant role-based pipeline**, real-time **WebSocket updates**, and complete **data privacy compliance**.
 
 ---
 
@@ -38,7 +40,7 @@ In traditional SME recruitment, HR teams waste dozens of hours writing job listi
 
 ```
                       ┌──────────────────────────────────────────────┐
-                      │       CogniHire Recruitment Lifecycle        │
+                      │       ShortList Recruitment Lifecycle        │
                       └──────────────────────┬───────────────────────┘
                                              │
       ┌──────────────────┬───────────────────┼───────────────────┬──────────────────┐
@@ -70,7 +72,7 @@ In traditional SME recruitment, HR teams waste dozens of hours writing job listi
 
 ## 🧠 AI Engine Architecture
 
-CogniHire encapsulates all LLM interactions inside a decoupled `AiProxyModule` using a zero-lock-in `AiProvider` interface:
+ShortList encapsulates all LLM interactions inside a decoupled `AiProxyModule` using a zero-lock-in `AiProvider` interface:
 
 ```text
                ┌───────────────────────────────────────────────────┐
@@ -103,7 +105,7 @@ CogniHire encapsulates all LLM interactions inside a decoupled `AiProxyModule` u
 ## 🏗️ System Architecture & Monorepo Layout
 
 ```text
-cognihire/
+shortlist/
 ├── backend/                      # NestJS v10 REST & WebSocket API Engine
 │   ├── src/
 │   │   ├── ai-proxy/             # Gemini 1.5 LLM Integration & Provider Proxy
@@ -166,8 +168,8 @@ cognihire/
 
 ```bash
 # 1. Clone the repository
-git clone https://github.com/Mustafa-Hazard/CogniHire.git
-cd CogniHire
+git clone https://github.com/Mustafa-Hazard/ShortList.git
+cd ShortList
 
 # 2. Configure Backend Environment
 cp backend/.env.example backend/.env
@@ -189,10 +191,10 @@ npm run dev
 ```bash
 # 1. Start Local MongoDB Service & Create Database
 sudo service postgresql start
-sudo -u postgres psql -c "CREATE DATABASE cognihire;"
-sudo -u postgres psql -c "CREATE USER cognihire WITH PASSWORD 'cognihire';"
-sudo -u postgres psql -c "GRANT ALL PRIVILEGES ON DATABASE cognihire TO cognihire;"
-sudo -u postgres psql -d cognihire -c "GRANT ALL ON SCHEMA public TO cognihire;"
+sudo -u postgres psql -c "CREATE DATABASE shortlist;"
+sudo -u postgres psql -c "CREATE USER shortlist WITH PASSWORD 'shortlist';"
+sudo -u postgres psql -c "GRANT ALL PRIVILEGES ON DATABASE shortlist TO shortlist;"
+sudo -u postgres psql -d shortlist -c "GRANT ALL ON SCHEMA public TO shortlist;"
 
 # 2. Start Backend
 cd backend
@@ -215,7 +217,7 @@ The application will be running at:
 
 ## 🧪 Testing & Quality Assurance
 
-CogniHire features comprehensive unit, controller, and E2E test suites with 100% pass rates:
+ShortList features comprehensive unit, controller, and E2E test suites with 100% pass rates:
 
 ```bash
 # Run backend unit & integration tests (145 passing tests)
@@ -236,11 +238,11 @@ cd frontend && npm run lint
 
 Detailed system design and compliance specifications are located in `/docs`:
 
-- 📊 **[Entity Relationship Diagram (docs/ER_DIAGRAM.md)](file:///home/mustafa_muhammad/Eden/Project/talentbridge/docs/ER_DIAGRAM.md):** Complete MongoDB database schema.
-- 🔌 **[API Contract Specification (docs/API_CONTRACT.md)](file:///home/mustafa_muhammad/Eden/Project/talentbridge/docs/API_CONTRACT.md):** REST endpoints, headers, and response payloads.
-- 🤖 **[AI Integration & Prompt Engineering Report (docs/AI_INTEGRATION_REPORT.md)](file:///home/mustafa_muhammad/Eden/Project/talentbridge/docs/AI_INTEGRATION_REPORT.md):** Prompt iteration logs and JSON schema enforcement.
-- 📝 **[Engineering Build Log (docs/BUILD_LOG.md)](file:///home/mustafa_muhammad/Eden/Project/talentbridge/docs/BUILD_LOG.md):** Architecture decision record and phase progression.
-- 🛡️ **[Data Privacy & GDPR Policy (docs/DATA_PRIVACY.md)](file:///home/mustafa_muhammad/Eden/Project/talentbridge/docs/DATA_PRIVACY.md):** Candidate CV text handling & data security policies.
+- 📊 **[Entity Relationship Diagram (docs/ER_DIAGRAM.md)](file://docs/ER_DIAGRAM.md):** Complete MongoDB database schema.
+- 🔌 **[API Contract Specification (docs/API_CONTRACT.md)](file://docs/API_CONTRACT.md):** REST endpoints, headers, and response payloads.
+- 🤖 **[AI Integration & Prompt Engineering Report (docs/AI_INTEGRATION_REPORT.md)](file://docs/AI_INTEGRATION_REPORT.md):** Prompt iteration logs and JSON schema enforcement.
+- 📝 **[Engineering Build Log (docs/BUILD_LOG.md)](file://docs/BUILD_LOG.md):** Architecture decision record and phase progression.
+- 🛡️ **[Data Privacy & GDPR Policy (docs/DATA_PRIVACY.md)](file://docs/DATA_PRIVACY.md):** Candidate CV text handling & data security policies.
 
 ---
 
