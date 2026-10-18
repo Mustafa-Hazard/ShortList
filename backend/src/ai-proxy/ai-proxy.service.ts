@@ -33,6 +33,33 @@ export class AiProxyService {
     prompt: string,
     options: GenerateContentOptions = {},
   ): Promise<string> {
+    if (process.env.AI_PROVIDER === 'mock') {
+      const lower = prompt.toLowerCase();
+      if (lower.includes('evaluate') || lower.includes('candidate application')) {
+        return JSON.stringify({
+          aiScore: 88,
+          aiExtraction: {
+            name: 'Alice Applicant',
+            topSkills: ['TypeScript', 'NestJS', 'React', 'MongoDB'],
+          },
+          aiStrengths: ['Experience aligned with core responsibilities'],
+          aiGaps: ['Review live CV attachment for verified credentials'],
+        });
+      }
+      if (lower.includes('job posting') || lower.includes('job description')) {
+        return 'Mock generated Job Description: Senior Full Stack Engineer.';
+      }
+      if (lower.includes('question') || lower.includes('interview')) {
+        return JSON.stringify([
+          { question: 'Tell me about your NestJS experience?', topic: 'Backend', difficulty: 'Mid' }
+        ]);
+      }
+      if (lower.includes('offer')) {
+        return 'Dear Candidate, Congratulations on your offer.';
+      }
+      return 'Mock AI generation result';
+    }
+
     if (!this.apiKey) {
       throw new AiProxyError('GEMINI_API_KEY is not configured');
     }
