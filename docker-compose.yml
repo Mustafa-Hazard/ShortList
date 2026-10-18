@@ -2,19 +2,19 @@ version: "3.9"
 
 services:
   db:
-    image: postgres:15-alpine
-    container_name: cognihire-db
+    image: mongo:7.0
+    container_name: cognihire-mongo
     restart: unless-stopped
     environment:
-      POSTGRES_USER: cognihire
-      POSTGRES_PASSWORD: cognihire
-      POSTGRES_DB: cognihire
+      MONGO_INITDB_ROOT_USERNAME: cognihire
+      MONGO_INITDB_ROOT_PASSWORD: cognihire
+      MONGO_INITDB_DATABASE: cognihire
     ports:
-      - "5432:5432"
+      - "27017:27017"
     volumes:
-      - cognihire-db-data:/var/lib/postgresql/data
+      - cognihire-mongo-data:/data/db
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U cognihire"]
+      test: ["CMD", "mongosh", "--eval", "db.adminCommand('ping')"]
       interval: 5s
       timeout: 5s
       retries: 10
@@ -31,15 +31,12 @@ services:
     env_file:
       - ./backend/.env
     environment:
-      DB_HOST: db
-      DB_PORT: 5432
-      DB_USERNAME: cognihire
-      DB_PASSWORD: cognihire
-      DB_NAME: cognihire
+      MONGODB_URI: mongodb://cognihire:cognihire@db:27017/cognihire?authSource=admin
+      PORT: 3000
     ports:
       - "3000:3000"
     command: >
-      sh -c "npm run migration:run && npm run start:prod"
+      sh -c "npm run start:prod"
 
 volumes:
-  cognihire-db-data:
+  cognihire-mongo-data:

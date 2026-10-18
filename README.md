@@ -9,7 +9,7 @@
 [![React](https://img.shields.io/badge/Frontend-React%20v18%20%2B%20Vite-61DAFB?style=for-the-badge&logo=react)](https://react.dev/)
 [![TypeScript](https://img.shields.io/badge/Language-TypeScript%20v5-3178C6?style=for-the-badge&logo=typescript)](https://www.typescriptlang.org/)
 [![Google Gemini API](https://img.shields.io/badge/AI-Google%20Gemini%201.5%20Flash-4285F4?style=for-the-badge&logo=google-gemini)](https://ai.google.dev/)
-[![PostgreSQL](https://img.shields.io/badge/Database-PostgreSQL%2015-4169E1?style=for-the-badge&logo=postgresql)](https://www.postgresql.org/)
+[![MongoDB](https://img.shields.io/badge/Database-MongoDB%207.0-47A248?style=for-the-badge&logo=mongodb)](https://www.mongodb.com/)
 [![Socket.io](https://img.shields.io/badge/RealTime-Socket.io-010101?style=for-the-badge&logo=socketdotio)](https://socket.io/)
 [![Docker](https://img.shields.io/badge/Containers-Docker%20Compose-2496ED?style=for-the-badge&logo=docker)](https://www.docker.com/)
 
@@ -61,7 +61,7 @@ In traditional SME recruitment, HR teams waste dozens of hours writing job listi
 
 ### 🛡️ 2. Multi-Tenant Governance & Security
 - 🔐 **Role-Guarded Authorization:** Strict global `JwtAuthGuard` and `@Roles()` guards protecting backend routes across 4 distinct roles: **Admin**, **Recruiter**, **Hiring Manager**, and **Candidate**.
-- 🔑 **Server-Side Session Revocation:** Hashed refresh token persistence (`refreshTokenHash`) in PostgreSQL ensuring instantaneous session revocation upon logout.
+- 🔑 **Server-Side Session Revocation:** Hashed refresh token persistence (`refreshTokenHash`) in MongoDB ensuring instantaneous session revocation upon logout.
 
 ### ⚡ 3. Real-Time Pipeline Collaboration
 - 📡 **Socket.io WebSockets:** Live event gateway emitting instant notifications across user dashboards when application stages transition (`APPLIED` → `SCREENED` → `SHORTLISTED` → `INTERVIEW` → `OFFER` → `HIRED`/`REJECTED`).
@@ -132,9 +132,9 @@ cognihire/
 │   ├── API_CONTRACT.md           # REST Endpoint Contracts & Payload Schemas
 │   ├── BUILD_LOG.md              # Chronological Engineering Decision History
 │   ├── DATA_PRIVACY.md           # GDPR & Resume Data Privacy Policies
-│   └── ER_DIAGRAM.md             # PostgreSQL Entity Relationship Model
+│   └── ER_DIAGRAM.md             # MongoDB Entity Relationship Model
 │
-└── docker-compose.yml            # Multi-Container Orchestration (Postgres + Backend)
+└── docker-compose.yml            # Multi-Container Orchestration (MongoDB + Backend)
 ```
 
 ---
@@ -157,7 +157,7 @@ cognihire/
 
 ### Prerequisites
 - **Node.js** >= 18.x
-- **PostgreSQL** >= 15.x *(or Docker)*
+- **MongoDB** >= 15.x *(or Docker)*
 - **Google Gemini API Key** *(Free tier available at [Google AI Studio](https://ai.google.dev))*
 
 ---
@@ -173,7 +173,7 @@ cd CogniHire
 cp backend/.env.example backend/.env
 # Edit backend/.env and add your GEMINI_API_KEY
 
-# 3. Start PostgreSQL and Backend Containers
+# 3. Start MongoDB and Backend Containers
 docker compose up -d
 
 # 4. In a second terminal, start Frontend
@@ -187,7 +187,7 @@ npm run dev
 ### Option B: Local Native Setup (Without Docker) 💻
 
 ```bash
-# 1. Start Local PostgreSQL Service & Create Database
+# 1. Start Local MongoDB Service & Create Database
 sudo service postgresql start
 sudo -u postgres psql -c "CREATE DATABASE cognihire;"
 sudo -u postgres psql -c "CREATE USER cognihire WITH PASSWORD 'cognihire';"
@@ -197,7 +197,7 @@ sudo -u postgres psql -d cognihire -c "GRANT ALL ON SCHEMA public TO cognihire;"
 # 2. Start Backend
 cd backend
 npm install
-npm run migration:run
+npm run seed
 npm run start:dev
 
 # 3. Start Frontend (New Terminal Window)
@@ -236,7 +236,7 @@ cd frontend && npm run lint
 
 Detailed system design and compliance specifications are located in `/docs`:
 
-- 📊 **[Entity Relationship Diagram (docs/ER_DIAGRAM.md)](file:///home/mustafa_muhammad/Eden/Project/talentbridge/docs/ER_DIAGRAM.md):** Complete PostgreSQL database schema.
+- 📊 **[Entity Relationship Diagram (docs/ER_DIAGRAM.md)](file:///home/mustafa_muhammad/Eden/Project/talentbridge/docs/ER_DIAGRAM.md):** Complete MongoDB database schema.
 - 🔌 **[API Contract Specification (docs/API_CONTRACT.md)](file:///home/mustafa_muhammad/Eden/Project/talentbridge/docs/API_CONTRACT.md):** REST endpoints, headers, and response payloads.
 - 🤖 **[AI Integration & Prompt Engineering Report (docs/AI_INTEGRATION_REPORT.md)](file:///home/mustafa_muhammad/Eden/Project/talentbridge/docs/AI_INTEGRATION_REPORT.md):** Prompt iteration logs and JSON schema enforcement.
 - 📝 **[Engineering Build Log (docs/BUILD_LOG.md)](file:///home/mustafa_muhammad/Eden/Project/talentbridge/docs/BUILD_LOG.md):** Architecture decision record and phase progression.
