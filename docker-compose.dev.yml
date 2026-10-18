@@ -1,0 +1,7 @@
+version: "3.9"
+
+# Development overlay: binds MongoDB to localhost for administrative or local debugging access
+services:
+  db:
+    ports:
+      - "127.0.0.1:27017:27017"

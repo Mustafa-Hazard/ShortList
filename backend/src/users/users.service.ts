@@ -1,8 +1,8 @@
 import { ConflictException, Injectable } from '@nestjs/common';
-import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { InjectModel } from '@nestjs/mongoose';
+import { Model } from 'mongoose';
 import * as bcrypt from 'bcrypt';
-import { User } from './user.entity';
+import { User, UserDocument } from './user.entity';
 import { Role } from '../common/enums/role.enum';
 
 export interface CreateUserInput {
@@ -16,16 +16,14 @@ export interface CreateUserInput {
 
 @Injectable()
 export class UsersService {
-  constructor(
-    @InjectRepository(User) private usersRepository: Repository<User>,
-  ) {}
+  constructor(@InjectModel(User.name) private userModel: Model<UserDocument>) {}
 
   async findByEmail(email: string): Promise<User | null> {
-    return this.usersRepository.findOneBy({ email: email.toLowerCase() });
+    return this.userModel.findOne({ email: email.toLowerCase() }).exec();
   }
 
   async findById(id: string): Promise<User | null> {
-    return this.usersRepository.findOneBy({ id });
+    return this.userModel.findById(id).exec();
   }
 
   async create(input: CreateUserInput): Promise<User> {
@@ -34,21 +32,32 @@ export class UsersService {
       throw new ConflictException('An account with this email already exists');
 
     const passwordHash = await bcrypt.hash(input.password, 10);
-    const user = this.usersRepository.create({
-      email: input.email.toLowerCase(),
-      passwordHash,
-      firstName: input.firstName,
-      lastName: input.lastName,
-      role: input.role,
-      companyId: input.companyId ?? null,
-    });
-    return this.usersRepository.save(user);
+    try {
+      const user = await this.userModel.create({
+        email: input.email.toLowerCase(),
+        passwordHash,
+        firstName: input.firstName,
+        lastName: input.lastName,
+        role: input.role,
+        companyId: input.companyId ?? null,
+      });
+      return user.toObject();
+    } catch (err: any) {
+      if (err.code === 11000) {
+        throw new ConflictException(
+          'An account with this email already exists',
+        );
+      }
+      throw err;
+    }
   }
 
   async setRefreshTokenHash(
     userId: string,
     refreshTokenHash: string | null,
   ): Promise<void> {
-    await this.usersRepository.update({ id: userId }, { refreshTokenHash });
+    await this.userModel
+      .updateOne({ _id: userId }, { refreshTokenHash })
+      .exec();
   }
 }

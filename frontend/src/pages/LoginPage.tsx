@@ -17,7 +17,7 @@ export function LoginPage() {
     try {
       await login(email, password);
     } catch (err: any) {
-      if (email.includes('@cognihire.dev') || email.includes('@talentbridge.dev') || email.includes('@acme.dev')) {
+      if (email.includes('@shortlist.dev') || email.includes('@talentbridge.dev') || email.includes('@acme.dev')) {
         let role: Role = Role.CANDIDATE;
         if (email.includes('recruiter')) role = Role.RECRUITER;
         else if (email.includes('hm')) role = Role.HIRING_MANAGER;
@@ -157,7 +157,7 @@ export function LoginPage() {
                 className="form-input"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                placeholder="operator@cognihire.dev"
+                placeholder="operator@shortlist.dev"
                 required
               />
             </div>
@@ -208,7 +208,7 @@ export function LoginPage() {
               <button
                 type="button"
                 className="btn btn-secondary btn-sm"
-                onClick={() => handleDemoLogin('candidate@cognihire.dev', Role.CANDIDATE)}
+                onClick={() => handleDemoLogin('candidate@shortlist.dev', Role.CANDIDATE)}
                 style={{ fontSize: '0.72rem', justifyContent: 'flex-start' }}
               >
                 <UserCheck size={13} color="var(--fg-main)" /> Candidate

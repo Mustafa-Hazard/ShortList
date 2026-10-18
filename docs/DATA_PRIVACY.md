@@ -1,6 +1,6 @@
-# CogniHire — Data Privacy & AI Ethics Compliance
+# ShortList — Data Privacy & AI Ethics Compliance
 
-This document outlines the data protection architecture, candidate PII safeguards, and AI ethics commitments enforced across the CogniHire platform.
+This document outlines the data protection architecture, candidate PII safeguards, and AI ethics commitments enforced across the ShortList platform.
 
 ---
 

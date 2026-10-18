@@ -1,6 +1,6 @@
 import { Module } from '@nestjs/common';
-import { TypeOrmModule } from '@nestjs/typeorm';
-import { Application } from './application.entity';
+import { MongooseModule } from '@nestjs/mongoose';
+import { Application, ApplicationSchema } from './application.entity';
 import { ApplicationsService } from './applications.service';
 import { ApplicationsController } from './applications.controller';
 import { CvScorerService } from './cv-scorer.service';
@@ -10,13 +10,15 @@ import { NotificationsModule } from '../notifications/notifications.module';
 
 @Module({
   imports: [
-    TypeOrmModule.forFeature([Application]),
+    MongooseModule.forFeature([
+      { name: Application.name, schema: ApplicationSchema },
+    ]),
     JobsModule,
     AiProxyModule,
     NotificationsModule,
   ],
   controllers: [ApplicationsController],
   providers: [ApplicationsService, CvScorerService],
-  exports: [ApplicationsService, CvScorerService],
+  exports: [ApplicationsService, CvScorerService, MongooseModule],
 })
 export class ApplicationsModule {}

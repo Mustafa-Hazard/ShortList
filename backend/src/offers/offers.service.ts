@@ -5,10 +5,13 @@ import {
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
-import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
-import { Offer } from './offer.entity';
-import { Application } from '../applications/application.entity';
+import { InjectModel } from '@nestjs/mongoose';
+import { Model } from 'mongoose';
+import { Offer, OfferDocument } from './offer.entity';
+import {
+  Application,
+  ApplicationDocument,
+} from '../applications/application.entity';
 import { User } from '../users/user.entity';
 import { Role } from '../common/enums/role.enum';
 import { OfferStatus } from '../common/enums/offer-status.enum';
@@ -23,28 +26,34 @@ import { UpdateOfferDto } from './dto/update-offer.dto';
 @Injectable()
 export class OffersService {
   constructor(
-    @InjectRepository(Offer)
-    private offersRepo: Repository<Offer>,
-    @InjectRepository(Application)
-    private applicationsRepo: Repository<Application>,
+    @InjectModel(Offer.name)
+    private offerModel: Model<OfferDocument>,
+    @InjectModel(Application.name)
+    private applicationModel: Model<ApplicationDocument>,
     private jobsService: JobsService,
     private offerDrafterService: OfferDrafterService,
     private notificationsService: NotificationsService,
   ) {}
 
   async create(dto: CreateOfferDto, user: User): Promise<Offer> {
-    const application = await this.applicationsRepo.findOne({
-      where: { id: dto.applicationId },
-      relations: { candidate: true, jobPosting: true },
-    });
+    if (
+      typeof dto.applicationId !== 'string' ||
+      !/^[a-zA-Z0-9-]+$/.test(dto.applicationId)
+    ) {
+      throw new BadRequestException('Invalid application ID');
+    }
+    const application = await this.applicationModel
+      .findById(dto.applicationId)
+      .populate('candidate')
+      .populate('jobPosting')
+      .exec();
     if (!application) throw new NotFoundException('Application not found');
 
-    // Confirm staff user belongs to the company owning this posting
     await this.jobsService.findOne(application.jobPostingId, user);
 
-    const existing = await this.offersRepo.findOne({
-      where: { applicationId: dto.applicationId },
-    });
+    const existing = await this.offerModel
+      .findOne({ applicationId: { $eq: String(dto.applicationId) } })
+      .exec();
     if (existing) {
       throw new ConflictException(
         'An offer has already been issued for this application',
@@ -66,12 +75,11 @@ export class OffersService {
           benefitsSummary: dto.benefitsSummary,
         });
       } catch {
-        // Degrade-don't-block: If AI drafting fails, offer creation succeeds with null draft.
         draftedLetter = null;
       }
     }
 
-    const offer = this.offersRepo.create({
+    const offer = await this.offerModel.create({
       applicationId: dto.applicationId,
       issuedById: user.id,
       roleTitle: dto.roleTitle,
@@ -83,47 +91,48 @@ export class OffersService {
       status: OfferStatus.ISSUED,
     });
 
-    return this.offersRepo.save(offer);
+    return offer.toObject();
   }
 
   async approveLetter(id: string, user: User): Promise<Offer> {
     const offer = await this.getOwnedForStaff(id, user);
     offer.letterApproved = true;
-    const saved = await this.offersRepo.save(offer);
+    await offer.save();
 
     try {
+      const app = offer.application as any;
       await this.notificationsService.createAndSend(
-        offer.application.candidateId,
+        app.candidateId,
         NotificationType.OFFER_ISSUED,
         {
-          offerId: saved.id,
-          applicationId: saved.applicationId,
-          roleTitle: saved.roleTitle,
-          salary: saved.salary,
+          offerId: offer.id,
+          applicationId: offer.applicationId,
+          roleTitle: offer.roleTitle,
+          salary: offer.salary,
         },
       );
     } catch {
       // Degrade-don't-block
     }
 
-    return saved;
+    return offer.toObject();
   }
 
   async generateLetter(id: string, user: User): Promise<Offer> {
-    const offer = await this.offersRepo.findOne({
-      where: { id },
-      relations: {
-        application: {
-          candidate: true,
-          jobPosting: true,
-        },
-      },
-    });
+    const offer = await this.offerModel
+      .findById(id)
+      .populate({
+        path: 'application',
+        populate: [{ path: 'candidate' }, { path: 'jobPosting' }],
+      })
+      .exec();
     if (!offer) throw new NotFoundException('Offer not found');
-    await this.jobsService.findOne(offer.application.jobPostingId, user);
+    const appJobPostingId = (offer.application as any)?.jobPostingId;
+    await this.jobsService.findOne(appJobPostingId, user);
 
-    const candidateName = offer.application.candidate
-      ? `${offer.application.candidate.firstName} ${offer.application.candidate.lastName}`
+    const candidate = (offer.application as any)?.candidate;
+    const candidateName = candidate
+      ? `${candidate.firstName} ${candidate.lastName}`
       : 'Candidate';
 
     const text = await this.offerDrafterService.generateDraft({
@@ -135,7 +144,8 @@ export class OffersService {
     });
 
     offer.draftedLetter = text;
-    return this.offersRepo.save(offer);
+    await offer.save();
+    return offer.toObject();
   }
 
   async respond(
@@ -143,13 +153,14 @@ export class OffersService {
     dto: RespondOfferDto,
     candidate: User,
   ): Promise<Offer> {
-    const offer = await this.offersRepo.findOne({
-      where: { id },
-      relations: { application: true },
-    });
+    const offer = await this.offerModel
+      .findById(id)
+      .populate('application')
+      .exec();
     if (!offer) throw new NotFoundException('Offer not found');
 
-    if (offer.application.candidateId !== candidate.id) {
+    const appCandidateId = (offer.application as any)?.candidateId;
+    if (appCandidateId !== candidate.id) {
       throw new ForbiddenException(
         'You do not have access to respond to this offer',
       );
@@ -166,7 +177,7 @@ export class OffersService {
       offer.candidateResponse = dto.candidateResponse;
     }
 
-    const saved = await this.offersRepo.save(offer);
+    await offer.save();
 
     if (offer.issuedById) {
       try {
@@ -174,10 +185,10 @@ export class OffersService {
           offer.issuedById,
           NotificationType.OFFER_RESPONDED,
           {
-            offerId: saved.id,
-            applicationId: saved.applicationId,
-            status: saved.status,
-            candidateResponse: saved.candidateResponse,
+            offerId: offer.id,
+            applicationId: offer.applicationId,
+            status: offer.status,
+            candidateResponse: offer.candidateResponse,
           },
         );
       } catch {
@@ -185,58 +196,67 @@ export class OffersService {
       }
     }
 
-    return saved;
+    return offer.toObject();
   }
 
   async update(id: string, dto: UpdateOfferDto, user: User): Promise<Offer> {
     const offer = await this.getOwnedForStaff(id, user);
     Object.assign(offer, dto);
-    return this.offersRepo.save(offer);
+    await offer.save();
+    return offer.toObject();
   }
 
   async findForApplication(applicationId: string, user: User): Promise<Offer> {
-    const offer = await this.offersRepo.findOne({
-      where: { applicationId },
-      relations: { application: true },
-    });
+    const offer = await this.offerModel
+      .findOne({ applicationId })
+      .populate('application')
+      .exec();
     if (!offer) throw new NotFoundException('Offer not found');
 
     if (user.role === Role.CANDIDATE) {
-      if (offer.application.candidateId !== user.id || !offer.letterApproved) {
+      const appCandidateId = (offer.application as any)?.candidateId;
+      if (appCandidateId !== user.id || !offer.letterApproved) {
         throw new NotFoundException('Offer not found');
       }
       return offer;
     }
 
-    await this.jobsService.findOne(offer.application.jobPostingId, user);
+    const appJobPostingId = (offer.application as any)?.jobPostingId;
+    await this.jobsService.findOne(appJobPostingId, user);
     return offer;
   }
 
   async findOne(id: string, user: User): Promise<Offer> {
-    const offer = await this.offersRepo.findOne({
-      where: { id },
-      relations: { application: true },
-    });
+    const offer = await this.offerModel
+      .findById(id)
+      .populate('application')
+      .exec();
     if (!offer) throw new NotFoundException('Offer not found');
 
     if (user.role === Role.CANDIDATE) {
-      if (offer.application.candidateId !== user.id || !offer.letterApproved) {
+      const appCandidateId = (offer.application as any)?.candidateId;
+      if (appCandidateId !== user.id || !offer.letterApproved) {
         throw new NotFoundException('Offer not found');
       }
       return offer;
     }
 
-    await this.jobsService.findOne(offer.application.jobPostingId, user);
+    const appJobPostingId = (offer.application as any)?.jobPostingId;
+    await this.jobsService.findOne(appJobPostingId, user);
     return offer;
   }
 
-  private async getOwnedForStaff(id: string, user: User): Promise<Offer> {
-    const offer = await this.offersRepo.findOne({
-      where: { id },
-      relations: { application: true },
-    });
+  private async getOwnedForStaff(
+    id: string,
+    user: User,
+  ): Promise<OfferDocument> {
+    const offer = await this.offerModel
+      .findById(id)
+      .populate('application')
+      .exec();
     if (!offer) throw new NotFoundException('Offer not found');
-    await this.jobsService.findOne(offer.application.jobPostingId, user);
+    const appJobPostingId = (offer.application as any)?.jobPostingId;
+    await this.jobsService.findOne(appJobPostingId, user);
     return offer;
   }
 }

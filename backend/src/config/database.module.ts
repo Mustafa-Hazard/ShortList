@@ -1,18 +1,20 @@
 import { Module } from '@nestjs/common';
-import { ConfigModule } from '@nestjs/config';
-import { TypeOrmModule } from '@nestjs/typeorm';
-import { buildDataSourceOptions } from './typeorm.options';
+import { ConfigModule, ConfigService } from '@nestjs/config';
+import { MongooseModule } from '@nestjs/mongoose';
 
 @Module({
   imports: [
-    // ConfigModule.forRoot() (registered globally in AppModule) has already
-    // loaded .env into process.env by the time this factory runs, so
-    // buildDataSourceOptions() (shared with the CLI in data-source.ts) can
-    // read it directly — one source of truth for connection options.
-    TypeOrmModule.forRootAsync({
+    MongooseModule.forRootAsync({
       imports: [ConfigModule],
-      useFactory: () => buildDataSourceOptions(process.env),
+      inject: [ConfigService],
+      useFactory: (config: ConfigService) => ({
+        uri:
+          config.get<string>('MONGODB_URI') ||
+          process.env.MONGODB_URI ||
+          'mongodb://localhost:27017/shortlist',
+      }),
     }),
   ],
+  exports: [MongooseModule],
 })
 export class DatabaseModule {}

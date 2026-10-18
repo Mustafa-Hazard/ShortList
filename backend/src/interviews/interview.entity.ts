@@ -1,74 +1,107 @@
-import {
-  Column,
-  CreateDateColumn,
-  Entity,
-  JoinColumn,
-  ManyToOne,
-  PrimaryGeneratedColumn,
-  UpdateDateColumn,
-} from 'typeorm';
+import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
+import { Document } from 'mongoose';
+import { randomUUID } from 'crypto';
 import { Application } from '../applications/application.entity';
 import { User } from '../users/user.entity';
 import { InterviewStatus, InterviewType } from '../common/enums/interview.enum';
 
-interface SuggestedQuestion {
+export interface SuggestedQuestion {
   question: string;
   listenFor: string;
 }
 
-@Entity('interviews')
+export type InterviewDocument = Interview & Document;
+
+@Schema({
+  collection: 'interviews',
+  timestamps: true,
+  toJSON: {
+    virtuals: true,
+    transform: (_doc, ret: any) => {
+      ret.id = ret._id;
+      delete ret._id;
+      delete ret.__v;
+      return ret;
+    },
+  },
+  toObject: {
+    virtuals: true,
+    transform: (_doc, ret: any) => {
+      ret.id = ret._id;
+      delete ret._id;
+      delete ret.__v;
+      return ret;
+    },
+  },
+})
 export class Interview {
-  @PrimaryGeneratedColumn('uuid')
-  id: string;
+  @Prop({ type: String, default: () => randomUUID() })
+  _id: string;
 
-  @ManyToOne(() => Application, (application) => application.interviews, {
-    onDelete: 'CASCADE',
-  })
-  @JoinColumn({ name: 'applicationId' })
-  application: Application;
+  get id(): string {
+    return this._id;
+  }
 
-  @Column()
+  @Prop({ type: String, required: true, ref: 'Application', index: true })
   applicationId: string;
 
-  @ManyToOne(() => User, { onDelete: 'SET NULL', nullable: true })
-  @JoinColumn({ name: 'proposedById' })
-  proposedBy: User | null;
+  application?: Application;
 
-  @Column({ nullable: true })
+  @Prop({ type: String, ref: 'User', default: null })
   proposedById: string | null;
 
-  @ManyToOne(() => User, { onDelete: 'SET NULL', nullable: true })
-  @JoinColumn({ name: 'hiringManagerId' })
-  hiringManager: User | null;
+  proposedBy?: User | null;
 
-  @Column({ nullable: true })
+  @Prop({ type: String, ref: 'User', default: null })
   hiringManagerId: string | null;
 
-  @Column({ type: 'enum', enum: InterviewType })
+  hiringManager?: User | null;
+
+  @Prop({ type: String, enum: Object.values(InterviewType), required: true })
   type: InterviewType;
 
-  // Recruiter-proposed slots; candidate confirms one of these.
-  @Column({ type: 'timestamptz', array: true, default: [] })
+  @Prop({ type: [Date], default: [] })
   proposedSlots: Date[];
 
-  @Column({ type: 'timestamptz', nullable: true })
+  @Prop({ type: Date, default: null })
   confirmedSlot: Date | null;
 
-  @Column({
-    type: 'enum',
-    enum: InterviewStatus,
+  @Prop({
+    type: String,
+    enum: Object.values(InterviewStatus),
     default: InterviewStatus.PROPOSED,
   })
   status: InterviewStatus;
 
-  // --- AI Feature 3: Interview Question Suggester output. Hiring manager can
-  // add/remove/reorder before the interview — the final array is what's saved. ---
-  @Column({ type: 'jsonb', default: [] })
+  @Prop({ type: Array, default: [] })
   questions: SuggestedQuestion[];
 
-  @CreateDateColumn()
-  createdAt: Date;
+  @Prop({ type: String, default: null })
+  notes: string | null;
 
-  @UpdateDateColumn()
+  createdAt: Date;
   updatedAt: Date;
 }
+
+export const InterviewSchema = SchemaFactory.createForClass(Interview);
+
+InterviewSchema.virtual('application', {
+  ref: 'Application',
+  localField: 'applicationId',
+  foreignField: '_id',
+  justOne: true,
+});
+
+InterviewSchema.virtual('proposedBy', {
+  ref: 'User',
+  localField: 'proposedById',
+  foreignField: '_id',
+  justOne: true,
+});
+
+InterviewSchema.virtual('hiringManager', {
+  ref: 'User',
+  localField: 'hiringManagerId',
+  foreignField: '_id',
+  justOne: true,
+});

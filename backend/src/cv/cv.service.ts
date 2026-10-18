@@ -5,23 +5,23 @@ import {
   Logger,
   NotFoundException,
 } from '@nestjs/common';
-import { InjectRepository } from '@nestjs/typeorm';
-import { Repository, QueryFailedError } from 'typeorm';
+import { InjectModel } from '@nestjs/mongoose';
+import { Model } from 'mongoose';
 import { readFile, unlink } from 'fs/promises';
+import { basename, resolve } from 'path';
+import { CV_UPLOAD_DIR } from './multer.config';
 import { PDFParse } from 'pdf-parse';
-import { Cv } from './cv.entity';
+import { Cv, CvDocument } from './cv.entity';
 import { ApplicationsService } from '../applications/applications.service';
 import { User } from '../users/user.entity';
-
-const UNIQUE_VIOLATION = '23505';
 
 @Injectable()
 export class CvService {
   private readonly logger = new Logger(CvService.name);
 
   constructor(
-    @InjectRepository(Cv)
-    private cvRepo: Repository<Cv>,
+    @InjectModel(Cv.name)
+    private cvModel: Model<CvDocument>,
     private applicationsService: ApplicationsService,
   ) {}
 
@@ -30,8 +30,6 @@ export class CvService {
     file: Express.Multer.File,
     candidate: User,
   ): Promise<Cv> {
-    // Throws 404 if this isn't the candidate's own application — same
-    // authorization ApplicationsController already enforces on GET.
     const application = await this.applicationsService.findOne(
       applicationId,
       candidate,
@@ -42,13 +40,33 @@ export class CvService {
       );
     }
 
-    // Extraction failure (encrypted PDF, scanned image with no text layer,
-    // corrupt file) does not block the upload — spec's fallback behaviour
-    // for AI Feature 2 is "CV is stored and recruiter reviews it manually
-    // with no AI scoring", which requires the file to exist even without text.
+    // Resolve strictly inside CV_UPLOAD_DIR to neutralize path traversal
+    const safeBaseDir = resolve(CV_UPLOAD_DIR);
+    const safeFilePath = resolve(safeBaseDir, basename(file.path));
+    if (!safeFilePath.startsWith(safeBaseDir)) {
+      throw new BadRequestException('Invalid file path');
+    }
+
+    // Validate PDF magic bytes (%PDF-) to prevent malicious non-PDF uploads
+    const buffer = await readFile(safeFilePath);
+    if (
+      !buffer ||
+      buffer.length < 5 ||
+      buffer.subarray(0, 5).toString('ascii') !== '%PDF-'
+    ) {
+      await unlink(safeFilePath).catch(() => undefined);
+      throw new BadRequestException(
+        'Uploaded file is not a valid PDF document (invalid magic bytes)',
+      );
+    }
+
+    // Sanitize filename to prevent path traversal or control character injection
+    const rawBaseName = basename(file.originalname || 'document.pdf');
+    const sanitizedFilename = rawBaseName.replace(/[^a-zA-Z0-9._-]/g, '_');
+
     let extractedText: string | null = null;
     try {
-      extractedText = await this.extractText(file.path);
+      extractedText = await this.extractTextFromBuffer(buffer);
     } catch (err) {
       this.logger.warn(
         `PDF text extraction failed for application ${applicationId}: ${
@@ -57,25 +75,19 @@ export class CvService {
       );
     }
 
-    const cv = this.cvRepo.create({
-      applicationId,
-      originalFilename: file.originalname,
-      storagePath: file.path,
-      fileSizeBytes: file.size,
-      extractedText,
-    });
-
     try {
-      return await this.cvRepo.save(cv);
-    } catch (err) {
-      // Application.cv is a OneToOne — a second upload attempt hits the
-      // unique constraint on applicationId. Clean up the just-written file
-      // on disk before surfacing the error, so we don't leak orphaned files.
-      await unlink(file.path).catch(() => undefined);
-      if (
-        err instanceof QueryFailedError &&
-        (err as any).driverError?.code === UNIQUE_VIOLATION
-      ) {
+      const cv = await this.cvModel.create({
+        applicationId,
+        originalFilename: sanitizedFilename,
+        storagePath: safeFilePath,
+        fileSizeBytes: file.size,
+        extractedText,
+        uploadedAt: new Date(),
+      });
+      return cv.toObject();
+    } catch (err: any) {
+      await unlink(safeFilePath).catch(() => undefined);
+      if (err.code === 11000) {
         throw new BadRequestException(
           'A CV has already been uploaded for this application',
         );
@@ -85,11 +97,9 @@ export class CvService {
   }
 
   async findOne(id: string, user: User): Promise<Cv> {
-    const cv = await this.cvRepo.findOne({ where: { id } });
+    const cv = await this.cvModel.findById(id).exec();
     if (!cv) throw new NotFoundException('CV not found');
 
-    // Reuses the same authorization as the owning application: candidate
-    // must own it, staff must belong to the posting's company.
     await this.applicationsService.findOne(cv.applicationId, user);
     return cv;
   }
@@ -102,8 +112,7 @@ export class CvService {
     return { path: cv.storagePath, filename: cv.originalFilename };
   }
 
-  private async extractText(filePath: string): Promise<string | null> {
-    const buffer = await readFile(filePath);
+  private async extractTextFromBuffer(buffer: Buffer): Promise<string | null> {
     const parser = new PDFParse({ data: buffer });
     try {
       const result = await parser.getText({ pageJoiner: '' });

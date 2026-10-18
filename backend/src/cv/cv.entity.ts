@@ -1,43 +1,72 @@
-import {
-  Column,
-  CreateDateColumn,
-  Entity,
-  JoinColumn,
-  OneToOne,
-  PrimaryGeneratedColumn,
-} from 'typeorm';
+import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
+import { Document } from 'mongoose';
+import { randomUUID } from 'crypto';
 import { Application } from '../applications/application.entity';
 
-@Entity('cvs')
+export type CvDocument = Cv & Document;
+
+@Schema({
+  collection: 'cvs',
+  timestamps: false,
+  toJSON: {
+    virtuals: true,
+    transform: (_doc, ret: any) => {
+      ret.id = ret._id;
+      delete ret._id;
+      delete ret.__v;
+      return ret;
+    },
+  },
+  toObject: {
+    virtuals: true,
+    transform: (_doc, ret: any) => {
+      ret.id = ret._id;
+      delete ret._id;
+      delete ret.__v;
+      return ret;
+    },
+  },
+})
 export class Cv {
-  @PrimaryGeneratedColumn('uuid')
-  id: string;
+  @Prop({ type: String, default: () => randomUUID() })
+  _id: string;
 
-  @OneToOne(() => Application, (application) => application.cv, {
-    onDelete: 'CASCADE',
+  get id(): string {
+    return this._id;
+  }
+
+  @Prop({
+    type: String,
+    required: true,
+    unique: true,
+    ref: 'Application',
+    index: true,
   })
-  @JoinColumn({ name: 'applicationId' })
-  application: Application;
-
-  @Column()
   applicationId: string;
 
-  @Column()
+  application?: Application;
+
+  @Prop({ required: true })
   originalFilename: string;
 
-  // Path on disk (or object storage key) — never exposed directly to other
-  // roles without going through an authorised download endpoint.
-  @Column()
+  @Prop({ required: true })
   storagePath: string;
 
-  @Column({ type: 'int' })
+  @Prop({ type: Number, required: true })
   fileSizeBytes: number;
 
-  // Server-side extracted text, produced once at upload time and reused by
-  // every AI feature (scorer, question suggester) so we never re-parse.
-  @Column({ type: 'text', nullable: true })
+  @Prop({ type: String, default: null })
   extractedText: string | null;
 
-  @CreateDateColumn()
+  @Prop({ type: Date, default: () => new Date() })
   uploadedAt: Date;
 }
+
+export const CvSchema = SchemaFactory.createForClass(Cv);
+
+CvSchema.virtual('application', {
+  ref: 'Application',
+  localField: 'applicationId',
+  foreignField: '_id',
+  justOne: true,
+});

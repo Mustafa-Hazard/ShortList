@@ -1,14 +1,18 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
-import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
-import { Notification, NotificationType } from './notification.entity';
+import { InjectModel } from '@nestjs/mongoose';
+import { Model } from 'mongoose';
+import {
+  Notification,
+  NotificationDocument,
+  NotificationType,
+} from './notification.entity';
 import { NotificationsGateway } from './notifications.gateway';
 
 @Injectable()
 export class NotificationsService {
   constructor(
-    @InjectRepository(Notification)
-    private notificationsRepo: Repository<Notification>,
+    @InjectModel(Notification.name)
+    private notificationModel: Model<NotificationDocument>,
     private notificationsGateway: NotificationsGateway,
   ) {}
 
@@ -17,14 +21,12 @@ export class NotificationsService {
     type: NotificationType,
     payload: Record<string, unknown>,
   ): Promise<Notification> {
-    const notification = this.notificationsRepo.create({
+    const notification = await this.notificationModel.create({
       userId,
       type,
       payload,
       read: false,
     });
-
-    const saved = await this.notificationsRepo.save(notification);
 
     try {
       this.notificationsGateway.sendNotification(userId, type, payload);
@@ -32,31 +34,29 @@ export class NotificationsService {
       // Degrade-don't-block if WebSocket delivery fails
     }
 
-    return saved;
+    return notification.toObject();
   }
 
   async findForUser(userId: string): Promise<Notification[]> {
-    return this.notificationsRepo.find({
-      where: { userId },
-      order: { createdAt: 'DESC' },
-    });
+    return this.notificationModel
+      .find({ userId })
+      .sort({ createdAt: -1 })
+      .exec();
   }
 
   async markAsRead(id: string, userId: string): Promise<Notification> {
-    const notification = await this.notificationsRepo.findOne({
-      where: { id, userId },
-    });
-    if (!notification) {
-      throw new NotFoundException('Notification not found');
-    }
+    const notification = await this.notificationModel
+      .findOne({ _id: id, userId })
+      .exec();
+    if (!notification) throw new NotFoundException('Notification not found');
     notification.read = true;
-    return this.notificationsRepo.save(notification);
+    await notification.save();
+    return notification.toObject();
   }
 
   async markAllAsRead(userId: string): Promise<void> {
-    await this.notificationsRepo.update(
-      { userId, read: false },
-      { read: true },
-    );
+    await this.notificationModel
+      .updateMany({ userId, read: false }, { read: true })
+      .exec();
   }
 }

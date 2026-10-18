@@ -1,78 +1,103 @@
-import {
-  Column,
-  CreateDateColumn,
-  Entity,
-  JoinColumn,
-  ManyToOne,
-  OneToMany,
-  PrimaryGeneratedColumn,
-  UpdateDateColumn,
-} from 'typeorm';
+import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
+import { Document } from 'mongoose';
+import { randomUUID } from 'crypto';
 import { Company } from '../companies/company.entity';
 import { User } from '../users/user.entity';
-import { Application } from '../applications/application.entity';
 import { JobStatus, JobType } from '../common/enums/job.enum';
 
-@Entity('job_postings')
+export type JobPostingDocument = JobPosting & Document;
+
+@Schema({
+  collection: 'job_postings',
+  timestamps: true,
+  toJSON: {
+    virtuals: true,
+    transform: (_doc, ret: any) => {
+      ret.id = ret._id;
+      delete ret._id;
+      delete ret.__v;
+      return ret;
+    },
+  },
+  toObject: {
+    virtuals: true,
+    transform: (_doc, ret: any) => {
+      ret.id = ret._id;
+      delete ret._id;
+      delete ret.__v;
+      return ret;
+    },
+  },
+})
 export class JobPosting {
-  @PrimaryGeneratedColumn('uuid')
-  id: string;
+  @Prop({ type: String, default: () => randomUUID() })
+  _id: string;
 
-  @ManyToOne(() => Company, (company) => company.jobPostings, {
-    onDelete: 'CASCADE',
-  })
-  @JoinColumn({ name: 'companyId' })
-  company: Company;
+  get id(): string {
+    return this._id;
+  }
 
-  @Column()
+  @Prop({ type: String, required: true, ref: 'Company', index: true })
   companyId: string;
 
-  @ManyToOne(() => User, { onDelete: 'SET NULL', nullable: true })
-  @JoinColumn({ name: 'createdById' })
-  createdBy: User | null;
+  company?: Company;
 
-  @Column({ nullable: true })
+  @Prop({ type: String, ref: 'User', default: null })
   createdById: string | null;
 
-  @Column()
+  createdBy?: User | null;
+
+  @Prop({ required: true })
   title: string;
 
-  @Column()
+  @Prop({ required: true })
   department: string;
 
-  @Column({ type: 'enum', enum: JobType })
+  @Prop({ type: String, enum: Object.values(JobType), required: true })
   type: JobType;
 
-  @Column({ type: 'int', nullable: true })
+  @Prop({ type: Number, default: null })
   salaryMin: number | null;
 
-  @Column({ type: 'int', nullable: true })
+  @Prop({ type: Number, default: null })
   salaryMax: number | null;
 
-  @Column({ type: 'text', array: true, default: [] })
+  @Prop({ type: [String], default: [] })
   requiredSkills: string[];
 
-  @Column({ type: 'text' })
+  @Prop({ required: true })
   responsibilities: string;
 
-  @Column({ type: 'text', nullable: true })
+  @Prop({ type: String, default: null })
   cultureNotes: string | null;
 
-  // Full AI-generated (or manually written) job description body.
-  // Kept separate from the structured fields above so the AI generator
-  // can regenerate it without clobbering the structured requirements.
-  @Column({ type: 'text', nullable: true })
+  @Prop({ type: String, default: null })
   description: string | null;
 
-  @Column({ type: 'enum', enum: JobStatus, default: JobStatus.DRAFT })
+  @Prop({
+    type: String,
+    enum: Object.values(JobStatus),
+    default: JobStatus.DRAFT,
+    index: true,
+  })
   status: JobStatus;
 
-  @OneToMany(() => Application, (application) => application.jobPosting)
-  applications: Application[];
-
-  @CreateDateColumn()
   createdAt: Date;
-
-  @UpdateDateColumn()
   updatedAt: Date;
 }
+
+export const JobPostingSchema = SchemaFactory.createForClass(JobPosting);
+
+JobPostingSchema.virtual('company', {
+  ref: 'Company',
+  localField: 'companyId',
+  foreignField: '_id',
+  justOne: true,
+});
+
+JobPostingSchema.virtual('createdBy', {
+  ref: 'User',
+  localField: 'createdById',
+  foreignField: '_id',
+  justOne: true,
+});

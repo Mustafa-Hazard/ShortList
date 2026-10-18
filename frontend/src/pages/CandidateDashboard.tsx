@@ -139,7 +139,7 @@ export function CandidateDashboard() {
               Welcome, {user?.firstName} {user?.lastName}
             </h1>
             <p style={{ color: 'var(--fg-muted)', fontSize: '0.85rem', marginTop: '0.2rem' }}>
-              Track your individual station position on the CogniHire transit line.
+              Track your individual station position on the ShortList transit line.
             </p>
           </div>
 

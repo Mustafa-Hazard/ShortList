@@ -116,7 +116,7 @@ export function Navbar() {
             >
               [CH-01]
             </div>
-            COGNIHIRE
+            SHORTLIST
           </Link>
 
           {user && (

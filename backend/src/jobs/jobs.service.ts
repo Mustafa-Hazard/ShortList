@@ -4,10 +4,13 @@ import {
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
-import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
-import { JobPosting } from './job-posting.entity';
-import { Application } from '../applications/application.entity';
+import { InjectModel } from '@nestjs/mongoose';
+import { Model } from 'mongoose';
+import { JobPosting, JobPostingDocument } from './job-posting.entity';
+import {
+  Application,
+  ApplicationDocument,
+} from '../applications/application.entity';
 import { JobStatus, JobType } from '../common/enums/job.enum';
 import { ApplicationStage } from '../common/enums/application-stage.enum';
 import { Role } from '../common/enums/role.enum';
@@ -17,11 +20,6 @@ import { UpdateJobPostingDto } from './dto/update-job-posting.dto';
 import { JobPostingQueryDto } from './dto/job-posting-query.dto';
 import { JdGeneratorService } from './jd-generator.service';
 
-// Linear forward-only lifecycle: Draft -> Published -> Closed -> Archived.
-// No reopening a closed posting and no skipping stages — each is its own
-// endpoint (see JobsController) so each transition can carry its own rules
-// later (e.g. "can't close if there are unresolved shortlisted candidates")
-// without one catch-all PATCH silently accepting any status.
 const ALLOWED_TRANSITIONS: Record<JobStatus, JobStatus | null> = {
   [JobStatus.DRAFT]: JobStatus.PUBLISHED,
   [JobStatus.PUBLISHED]: JobStatus.CLOSED,
@@ -32,10 +30,10 @@ const ALLOWED_TRANSITIONS: Record<JobStatus, JobStatus | null> = {
 @Injectable()
 export class JobsService {
   constructor(
-    @InjectRepository(JobPosting)
-    private jobPostingsRepo: Repository<JobPosting>,
-    @InjectRepository(Application)
-    private applicationsRepo: Repository<Application>,
+    @InjectModel(JobPosting.name)
+    private jobPostingModel: Model<JobPostingDocument>,
+    @InjectModel(Application.name)
+    private applicationModel: Model<ApplicationDocument>,
     private jdGeneratorService: JdGeneratorService,
   ) {}
 
@@ -60,20 +58,18 @@ export class JobsService {
           cultureNotes: dto.cultureNotes ?? null,
         });
       } catch {
-        // Degrade-don't-block: If AI proxy fails during auto-generation,
-        // fall back gracefully so job creation succeeds.
         description = dto.description ?? null;
       }
     }
 
-    const posting = this.jobPostingsRepo.create({
+    const posting = await this.jobPostingModel.create({
       ...dto,
       description,
       companyId: user.companyId,
       createdById: user.id,
       status: JobStatus.DRAFT,
     });
-    return this.jobPostingsRepo.save(posting);
+    return posting.toObject();
   }
 
   async generateDescription(id: string, user: User): Promise<JobPosting> {
@@ -89,36 +85,43 @@ export class JobsService {
       cultureNotes: posting.cultureNotes ?? null,
     });
     posting.description = description;
-    return this.jobPostingsRepo.save(posting);
+    await posting.save();
+    return posting.toObject();
   }
 
   async findAll(query: JobPostingQueryDto, user: User): Promise<JobPosting[]> {
-    // Candidates get the public job board: published postings across every
-    // company, no draft/closed/archived leakage, status filter ignored.
     if (user.role === Role.CANDIDATE) {
-      return this.jobPostingsRepo.find({
-        where: { status: JobStatus.PUBLISHED },
-        order: { createdAt: 'DESC' },
-      });
+      return this.jobPostingModel
+        .find({ status: JobStatus.PUBLISHED })
+        .sort({ createdAt: -1 })
+        .exec();
     }
 
-    // Staff (recruiter, hiring manager, admin) see only their own company's
-    // postings, optionally filtered by status.
-    return this.jobPostingsRepo.find({
-      where: {
-        companyId: user.companyId ?? undefined,
-        ...(query.status ? { status: query.status } : {}),
-      },
-      order: { createdAt: 'DESC' },
-    });
+    const filter: Record<string, any> = {};
+    if (user.companyId) {
+      filter.companyId = user.companyId;
+    }
+    if (query.status) {
+      if (
+        typeof query.status !== 'string' ||
+        !/^[a-zA-Z0-9_-]+$/.test(query.status)
+      ) {
+        throw new BadRequestException('Invalid status filter');
+      }
+      filter.status = query.status;
+    }
+
+    return this.jobPostingModel.find(filter).sort({ createdAt: -1 }).exec();
   }
 
   async findOne(id: string, user: User): Promise<JobPosting> {
-    const posting = await this.jobPostingsRepo.findOne({ where: { id } });
+    if (typeof id !== 'string' || !/^[a-zA-Z0-9-]+$/.test(id)) {
+      throw new BadRequestException('Invalid job posting ID');
+    }
+    const posting = await this.jobPostingModel.findById(id).exec();
     if (!posting) throw new NotFoundException('Job posting not found');
 
     if (user.role === Role.CANDIDATE) {
-      // Don't reveal that a draft/closed/archived posting exists at all.
       if (posting.status !== JobStatus.PUBLISHED) {
         throw new NotFoundException('Job posting not found');
       }
@@ -143,7 +146,8 @@ export class JobsService {
       throw new BadRequestException('Archived postings cannot be edited');
     }
     Object.assign(posting, dto);
-    return this.jobPostingsRepo.save(posting);
+    await posting.save();
+    return posting.toObject();
   }
 
   async remove(id: string, user: User): Promise<void> {
@@ -153,7 +157,7 @@ export class JobsService {
         'Only draft postings can be deleted — publish, close, or archive it instead',
       );
     }
-    await this.jobPostingsRepo.remove(posting);
+    await this.jobPostingModel.deleteOne({ _id: id }).exec();
   }
 
   async transition(
@@ -169,32 +173,33 @@ export class JobsService {
       );
     }
     posting.status = target;
-    return this.jobPostingsRepo.save(posting);
+    await posting.save();
+    return posting.toObject();
   }
 
   async stats(id: string, user: User) {
     const posting = await this.getOwnedForStaff(id, user);
 
-    const rows = await this.applicationsRepo
-      .createQueryBuilder('application')
-      .select('application.stage', 'stage')
-      .addSelect('COUNT(*)', 'count')
-      .where('application.jobPostingId = :id', { id })
-      .groupBy('application.stage')
-      .getRawMany<{ stage: ApplicationStage; count: string }>();
+    const rows = await this.applicationModel.aggregate<{
+      _id: ApplicationStage;
+      count: number;
+    }>([
+      { $match: { jobPostingId: id } },
+      { $group: { _id: '$stage', count: { $sum: 1 } } },
+    ]);
 
     const stageCounts = Object.fromEntries(
       Object.values(ApplicationStage).map((stage) => [stage, 0]),
     ) as Record<ApplicationStage, number>;
     let totalApplications = 0;
     for (const row of rows) {
-      const count = parseInt(row.count, 10);
-      stageCounts[row.stage] = count;
-      totalApplications += count;
+      stageCounts[row._id] = row.count;
+      totalApplications += row.count;
     }
 
     const daysOpen = Math.floor(
-      (Date.now() - posting.createdAt.getTime()) / (1000 * 60 * 60 * 24),
+      (Date.now() - new Date(posting.createdAt).getTime()) /
+        (1000 * 60 * 60 * 24),
     );
 
     return {
@@ -223,11 +228,11 @@ export class JobsService {
     });
   }
 
-  // Shared by update/remove/transition/stats: load a posting and confirm the
-  // requesting staff member belongs to the company that owns it. Candidates
-  // never call these paths (guarded at the controller with @Roles).
-  private async getOwnedForStaff(id: string, user: User): Promise<JobPosting> {
-    const posting = await this.jobPostingsRepo.findOne({ where: { id } });
+  private async getOwnedForStaff(
+    id: string,
+    user: User,
+  ): Promise<JobPostingDocument> {
+    const posting = await this.jobPostingModel.findById(id).exec();
     if (!posting) throw new NotFoundException('Job posting not found');
     if (posting.companyId !== user.companyId) {
       throw new ForbiddenException(

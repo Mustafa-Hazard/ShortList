@@ -1,11 +1,6 @@
-import {
-  Column,
-  CreateDateColumn,
-  Entity,
-  JoinColumn,
-  ManyToOne,
-  PrimaryGeneratedColumn,
-} from 'typeorm';
+import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
+import { Document } from 'mongoose';
+import { randomUUID } from 'crypto';
 import { User } from '../users/user.entity';
 
 export enum NotificationType {
@@ -17,29 +12,60 @@ export enum NotificationType {
   OFFER_RESPONDED = 'offer_responded',
 }
 
-// Persisted so a user who is offline when a WebSocket event fires can still
-// see it on next login — the gateway both emits live and writes one of these.
-@Entity('notifications')
+export type NotificationDocument = Notification & Document;
+
+@Schema({
+  collection: 'notifications',
+  timestamps: { createdAt: true, updatedAt: false },
+  toJSON: {
+    virtuals: true,
+    transform: (_doc, ret: any) => {
+      ret.id = ret._id;
+      delete ret._id;
+      delete ret.__v;
+      return ret;
+    },
+  },
+  toObject: {
+    virtuals: true,
+    transform: (_doc, ret: any) => {
+      ret.id = ret._id;
+      delete ret._id;
+      delete ret.__v;
+      return ret;
+    },
+  },
+})
 export class Notification {
-  @PrimaryGeneratedColumn('uuid')
-  id: string;
+  @Prop({ type: String, default: () => randomUUID() })
+  _id: string;
 
-  @ManyToOne(() => User, { onDelete: 'CASCADE' })
-  @JoinColumn({ name: 'userId' })
-  user: User;
+  get id(): string {
+    return this._id;
+  }
 
-  @Column()
+  @Prop({ type: String, required: true, ref: 'User', index: true })
   userId: string;
 
-  @Column({ type: 'enum', enum: NotificationType })
+  user?: User;
+
+  @Prop({ type: String, enum: Object.values(NotificationType), required: true })
   type: NotificationType;
 
-  @Column({ type: 'jsonb' })
+  @Prop({ type: Object, required: true })
   payload: Record<string, unknown>;
 
-  @Column({ default: false })
+  @Prop({ type: Boolean, default: false })
   read: boolean;
 
-  @CreateDateColumn()
   createdAt: Date;
 }
+
+export const NotificationSchema = SchemaFactory.createForClass(Notification);
+
+NotificationSchema.virtual('user', {
+  ref: 'User',
+  localField: 'userId',
+  foreignField: '_id',
+  justOne: true,
+});

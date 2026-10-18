@@ -2,16 +2,16 @@ import { Injectable, UnauthorizedException } from '@nestjs/common';
 import { PassportStrategy } from '@nestjs/passport';
 import { ConfigService } from '@nestjs/config';
 import { ExtractJwt, Strategy } from 'passport-jwt';
-import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
-import { User } from '../../users/user.entity';
+import { InjectModel } from '@nestjs/mongoose';
+import { Model } from 'mongoose';
+import { User, UserDocument } from '../../users/user.entity';
 import { JwtPayload } from '../jwt-payload.interface';
 
 @Injectable()
 export class JwtStrategy extends PassportStrategy(Strategy, 'jwt') {
   constructor(
     config: ConfigService,
-    @InjectRepository(User) private usersRepository: Repository<User>,
+    @InjectModel(User.name) private userModel: Model<UserDocument>,
   ) {
     super({
       jwtFromRequest: ExtractJwt.fromAuthHeaderAsBearerToken(),
@@ -20,11 +20,8 @@ export class JwtStrategy extends PassportStrategy(Strategy, 'jwt') {
     });
   }
 
-  // Runs on every authenticated request. Re-fetching the user (rather than
-  // trusting the payload blindly) means a role change or deactivation takes
-  // effect immediately instead of waiting for the token to expire.
   async validate(payload: JwtPayload): Promise<User> {
-    const user = await this.usersRepository.findOneBy({ id: payload.sub });
+    const user = await this.userModel.findById(payload.sub).exec();
     if (!user) throw new UnauthorizedException('User no longer exists');
     return user;
   }

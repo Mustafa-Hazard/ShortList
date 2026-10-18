@@ -1,255 +1,216 @@
-<div align="center">
+# ShortList
 
-# 🧠 CogniHire
+A hiring and candidate tracking web application with AI resume scoring and real-time updates.
 
-### *Next-Generation AI-Augmented SME Recruitment Engine*
+Formerly CogniHire.
 
-[![Build & Tests](https://img.shields.io/badge/Build%20%26%20Tests-100%25%20Passing-brightgreen?style=for-the-badge&logo=github-actions)](https://github.com/Mustafa-Hazard/CogniHire)
-[![NestJS](https://img.shields.io/badge/Backend-NestJS%20v10-E0234E?style=for-the-badge&logo=nestjs)](https://nestjs.com/)
-[![React](https://img.shields.io/badge/Frontend-React%20v18%20%2B%20Vite-61DAFB?style=for-the-badge&logo=react)](https://react.dev/)
-[![TypeScript](https://img.shields.io/badge/Language-TypeScript%20v5-3178C6?style=for-the-badge&logo=typescript)](https://www.typescriptlang.org/)
-[![Google Gemini API](https://img.shields.io/badge/AI-Google%20Gemini%201.5%20Flash-4285F4?style=for-the-badge&logo=google-gemini)](https://ai.google.dev/)
-[![PostgreSQL](https://img.shields.io/badge/Database-PostgreSQL%2015-4169E1?style=for-the-badge&logo=postgresql)](https://www.postgresql.org/)
-[![Socket.io](https://img.shields.io/badge/RealTime-Socket.io-010101?style=for-the-badge&logo=socketdotio)](https://socket.io/)
-[![Docker](https://img.shields.io/badge/Containers-Docker%20Compose-2496ED?style=for-the-badge&logo=docker)](https://www.docker.com/)
+<!-- add screenshot here -->
 
-[Overview](#-overview) •
-[Key Features](#-key-features) •
-[AI Engine Architecture](#-ai-engine-architecture) •
-[System Architecture](#-system-architecture--monorepo-layout) •
-[RBAC Matrix](#-role-based-access-control-rbac-matrix) •
-[Getting Started](#-getting-started) •
-[API & Swagger](#-api-documentation--swagger) •
-[Documentation Vault](#-documentation-vault)
+## About
 
-</div>
+Hiring teams often spend hours sorting through resumes, tracking applicants in messy spreadsheets, and drafting interview notes. ShortList gives recruiters a single dashboard to post jobs, review applicants, and move candidates through hiring stages, while candidates get a simple portal to apply and follow their application status. I built this project to learn how to build and secure a full-stack system with role-based access, real-time events, and document parsing.
 
----
+## Features
 
-## 📖 Overview
+- **Job posting**: Recruiters can create, publish, and close job postings with role requirements and salary ranges.
+- **Job applications**: Candidates can browse open positions, submit applications, and track their progress.
+- **CV upload and parsing**: Candidates can upload PDF resumes, which are verified by file size and magic bytes before text extraction.
+- **AI resume scoring**: Evaluates resumes against job requirements using Google Gemini (or a built-in mock provider for local testing) and provides a score with strengths and gaps.
+- **Hiring pipeline stages**: Recruiters can advance candidate applications across stages (applied, screened, interview scheduled, offered, hired, rejected).
+- **Real-time notifications**: Socket.IO sends alerts to users when application stages change or interviews are scheduled.
+- **Job statistics**: Aggregation pipelines calculate applicant counts and stage breakdowns for each job posting.
 
-**CogniHire** is an intelligent, full-stack recruitment platform engineered specifically to eliminate the slowest bottlenecks in SME (Small and Medium Enterprise) hiring.
+## Tech Stack
 
-In traditional SME recruitment, HR teams waste dozens of hours writing job listings, manually reading CVs, preparing generic interview questions, and drafting offer letters. **CogniHire automates these tasks with an integrated Google Gemini 1.5 Flash AI Engine**, while enforcing a strict **multi-tenant role-based pipeline**, real-time **WebSocket updates**, and complete **data privacy compliance**.
+| Component | Technology | Description |
+| :--- | :--- | :--- |
+| **Frontend** | React 18, Vite, TypeScript | SPA with React Router, Zustand for state, and Lucide icons |
+| **Backend** | NestJS 10, Node.js 22, Express | Modular TypeScript API with class-validator and DTOs |
+| **Database** | MongoDB 7, Mongoose | Document database with custom schema validations and aggregations |
+| **Real-time** | Socket.IO | WebSockets with JWT handshake authentication |
+| **DevOps** | Docker, Docker Compose | Multi-stage slim Alpine images running as non-root (`node`) |
+| **Testing & CI** | Jest, Supertest, GitHub Actions | 24 Jest test suites (133 tests), CodeQL, Dependabot |
 
----
+## How It Works
 
-## ✨ Key Features & Capabilities
-
-```
-                      ┌──────────────────────────────────────────────┐
-                      │       CogniHire Recruitment Lifecycle        │
-                      └──────────────────────┬───────────────────────┘
-                                             │
-      ┌──────────────────┬───────────────────┼───────────────────┬──────────────────┐
-      │                  │                   │                   │                  │
-      ▼                  ▼                   ▼                   ▼                  ▼
-┌───────────┐      ┌───────────┐       ┌───────────┐       ┌───────────┐      ┌───────────┐
-│  APPLIED  │ ───► │ SCREENED  │  ───► │SHORTLISTED│  ───► │ INTERVIEW │ ───► │   OFFER   │
-└───────────┘      └───────────┘       └───────────┘       └───────────┘      └───────────┘
-      │                  │                   │                   │                  │
-   PDF CV             AI Match          Role-Guarded         AI Question         AI Offer
- Upload &            Scorer &           Recruiter &           Suggester            Letter
- Extraction         Extraction          HM Review             & Schedule          Drafter
+```mermaid
+graph LR
+    User[User Browser / React SPA] -->|HTTPS REST & WSS| API[NestJS Backend API]
+    API -->|Mongoose Driver| DB[(MongoDB)]
+    API -->|AI Evaluation Request| AI[Gemini API / Mock Provider]
+    API -->|Push Stage Events| User
 ```
 
-### 🤖 1. AI-Augmented HR Workflows (Google Gemini 1.5 Flash)
-- 📝 **AI Job Description Generator:** Generates structured, bias-free job descriptions containing role summaries, key responsibilities, and skill requirements from minimal inputs.
-- 🎯 **CV Parser & Match Scorer (0–100):** Extracts plain text from candidate CV PDFs using `pdf-parse` and evaluates skill fit against job criteria, producing an objective score, candidate strengths, and identified skill gaps.
-- 💡 **Tailored Interview Question Suggester:** Generates candidate-specific technical, behavioral, and system design questions targeting candidate skill gaps, complete with *"what to listen for"* evaluation signals.
-- ✉️ **Automated Offer Letter Drafter:** Drafts personalized, formal job offer letters incorporating candidate names, salaries, start dates, and benefits.
+1. Candidates view published jobs and submit an application with their PDF resume.
+2. The NestJS backend validates the upload, extracts resume text, and calls the AI service to score qualifications against job requirements.
+3. Recruiters review scored candidates in the dashboard and update application stages.
+4. MongoDB stores users, jobs, applications, interview notes, and audit logs.
+5. Socket.IO pushes notifications directly to the candidate browser session.
 
-### 🛡️ 2. Multi-Tenant Governance & Security
-- 🔐 **Role-Guarded Authorization:** Strict global `JwtAuthGuard` and `@Roles()` guards protecting backend routes across 4 distinct roles: **Admin**, **Recruiter**, **Hiring Manager**, and **Candidate**.
-- 🔑 **Server-Side Session Revocation:** Hashed refresh token persistence (`refreshTokenHash`) in PostgreSQL ensuring instantaneous session revocation upon logout.
+## Getting Started
 
-### ⚡ 3. Real-Time Pipeline Collaboration
-- 📡 **Socket.io WebSockets:** Live event gateway emitting instant notifications across user dashboards when application stages transition (`APPLIED` → `SCREENED` → `SHORTLISTED` → `INTERVIEW` → `OFFER` → `HIRED`/`REJECTED`).
+### Requirements
+- Node.js 20+ (tested on Node.js 22)
+- Docker and Docker Compose (tested on Docker 29.x and Compose v5.x)
+- Git
 
----
-
-## 🧠 AI Engine Architecture
-
-CogniHire encapsulates all LLM interactions inside a decoupled `AiProxyModule` using a zero-lock-in `AiProvider` interface:
-
-```text
-               ┌───────────────────────────────────────────────────┐
-               │                NestJS Service Layer               │
-               │   (JdGenerator / CvScorer / QuestionSuggester)   │
-               └─────────────────────────┬─────────────────────────┘
-                                         │
-                                         ▼
-               ┌───────────────────────────────────────────────────┐
-               │           AiProxyService (Resilience Proxy)       │
-               │  - Exponential Backoff Retries (3 Attempts)       │
-               │  - Structured JSON Regex Sanitization             │
-               │  - Degrade-Don't-Block Fallback Defaults           │
-               └─────────────────────────┬─────────────────────────┘
-                                         │
-                                         ▼
-               ┌───────────────────────────────────────────────────┐
-               │              AiProvider (Interface)               │
-               └──────────┬─────────────────────────────┬──────────┘
-                          │                             │
-                          ▼                             ▼
-            ┌───────────────────────────┐  ┌─────────────────────────┐
-            │  Google Gemini Provider   │  │  OpenAI / Claude Provider│
-            │  (gemini-1.5-flash API)   │  │  (One-File Swap Ready)  │
-            └───────────────────────────┘  └─────────────────────────┘
-```
-
----
-
-## 🏗️ System Architecture & Monorepo Layout
-
-```text
-cognihire/
-├── backend/                      # NestJS v10 REST & WebSocket API Engine
-│   ├── src/
-│   │   ├── ai-proxy/             # Gemini 1.5 LLM Integration & Provider Proxy
-│   │   ├── applications/         # Hiring Pipeline State Machine & CV Scorer
-│   │   ├── auth/                 # JWT Authentication & RBAC Guards
-│   │   ├── companies/            # Multi-tenant Company Management
-│   │   ├── cv/                   # PDF Upload & Server-side Text Extraction
-│   │   ├── interviews/           # Interview Scheduling & AI Question Suggester
-│   │   ├── jobs/                 # Job Posting CRUD & AI JD Generator
-│   │   ├── notifications/        # WebSocket Gateway (Socket.io)
-│   │   ├── offers/               # Offer Management & AI Letter Drafter
-│   │   └── users/                # User Management & Role Access
-│   ├── test/                     # Jest E2E & Integration Test Suites
-│   └── Dockerfile                # Multi-stage Backend Container Dockerfile
-│
-├── frontend/                     # React 18 + TypeScript Client (Vite)
-│   ├── src/
-│   │   ├── api/                  # Axios HTTP Client & API Interceptors
-│   │   ├── components/           # Reusable UI Design System & Cards
-│   │   ├── pages/                # Admin, Recruiter, HM & Candidate Dashboards
-│   │   └── store/                # Zustand Auth & Application State
-│   └── vite.config.ts            # Vite Bundler & Dev Server Config
-│
-├── docs/                         # Architecture & Compliance Vault
-│   ├── AI_INTEGRATION_REPORT.md  # Detailed Prompt Engineering & AI Architecture
-│   ├── API_CONTRACT.md           # REST Endpoint Contracts & Payload Schemas
-│   ├── BUILD_LOG.md              # Chronological Engineering Decision History
-│   ├── DATA_PRIVACY.md           # GDPR & Resume Data Privacy Policies
-│   └── ER_DIAGRAM.md             # PostgreSQL Entity Relationship Model
-│
-└── docker-compose.yml            # Multi-Container Orchestration (Postgres + Backend)
-```
-
----
-
-## 🔐 Role-Based Access Control (RBAC) Matrix
-
-| Feature / Action | Candidate | Hiring Manager | Recruiter | Admin |
-| :--- | :---: | :---: | :---: | :---: |
-| **View Published Jobs** | 👁️ Public | 👁️ Company | 👁️ Company | ⚡ All |
-| **Apply for Job & Upload CV** | ✅ Yes | ❌ No | ❌ No | ❌ No |
-| **Generate AI Job Description** | ❌ No | ✅ Yes | ✅ Yes | ⚡ All |
-| **Screen CV & AI Match Scoring** | ❌ No | 👁️ Read-Only | ✅ Trigger/Manage | ⚡ All |
-| **Schedule Interview & AI Questions** | ❌ No | ✅ Assigned | ✅ Full Control | ⚡ All |
-| **Draft & Issue AI Offer Letter** | ❌ No | 👁️ Review | ✅ Draft & Issue | ⚡ All |
-| **Manage Tenant & System Users** | ❌ No | ❌ No | ❌ No | ⚡ Admin Only |
-
----
-
-## 🚀 Getting Started
-
-### Prerequisites
-- **Node.js** >= 18.x
-- **PostgreSQL** >= 15.x *(or Docker)*
-- **Google Gemini API Key** *(Free tier available at [Google AI Studio](https://ai.google.dev))*
-
----
-
-### Option A: Quick Start with Docker Compose 🐳
-
+### Run with Docker
+1. Clone the repository and navigate into the folder:
 ```bash
-# 1. Clone the repository
-git clone https://github.com/Mustafa-Hazard/CogniHire.git
-cd CogniHire
-
-# 2. Configure Backend Environment
-cp backend/.env.example backend/.env
-# Edit backend/.env and add your GEMINI_API_KEY
-
-# 3. Start PostgreSQL and Backend Containers
-docker compose up -d
-
-# 4. In a second terminal, start Frontend
-cd frontend
-npm install
-npm run dev
+git clone https://github.com/Mustafa-Hazard/ShortList.git
+cd ShortList
 ```
 
----
-
-### Option B: Local Native Setup (Without Docker) 💻
-
+2. Create your environment file from the template:
 ```bash
-# 1. Start Local PostgreSQL Service & Create Database
-sudo service postgresql start
-sudo -u postgres psql -c "CREATE DATABASE cognihire;"
-sudo -u postgres psql -c "CREATE USER cognihire WITH PASSWORD 'cognihire';"
-sudo -u postgres psql -c "GRANT ALL PRIVILEGES ON DATABASE cognihire TO cognihire;"
-sudo -u postgres psql -d cognihire -c "GRANT ALL ON SCHEMA public TO cognihire;"
+cp .env.example .env
+```
 
-# 2. Start Backend
+3. Build and start the containers:
+```bash
+docker compose up --build -d
+```
+
+4. Seed the database with test accounts and a sample job:
+```bash
+docker compose exec backend node dist/seed.js
+```
+
+The frontend runs at `http://localhost:5173` and the backend API runs at `http://localhost:3000`.
+
+### Run without Docker
+To run directly on your host machine, you will need a running MongoDB instance. You can start the database container with local host binding:
+```bash
+docker compose -f docker-compose.yml -f docker-compose.dev.yml up -d db
+```
+
+1. Create your environment file:
+```bash
+cp .env.example .env
+```
+*(Update `MONGODB_URI` in `.env` to connect to `127.0.0.1:27017`)*
+
+2. Start the backend:
+```bash
 cd backend
 npm install
-npm run migration:run
+npm run build
+npm run seed
 npm run start:dev
+```
 
-# 3. Start Frontend (New Terminal Window)
+3. Start the frontend in a separate terminal:
+```bash
 cd frontend
 npm install
 npm run dev
 ```
 
-The application will be running at:
-- 🌐 **Frontend Application:** `http://localhost:5173`
-- ⚙️ **Backend REST API:** `http://localhost:3000`
-- 📚 **Interactive Swagger API Docs:** `http://localhost:3000/api`
+### Environment Variables
 
----
+| Variable | Description | Example / Default |
+| :--- | :--- | :--- |
+| `PORT` | HTTP port for the NestJS API | `3000` |
+| `FRONTEND_PORT` | Port for the Vite frontend server | `5173` |
+| `NODE_ENV` | Environment mode (`development` or `production`) | `production` |
+| `CORS_ORIGIN` | Allowed web frontend origin for CORS | `http://localhost:5173` |
+| `MONGO_USER` | MongoDB admin username | `shortlist` |
+| `MONGO_PASSWORD` | MongoDB admin password | `shortlist_secure_dev_pass_123` |
+| `MONGO_DB` | MongoDB database name | `shortlist` |
+| `MONGODB_URI` | MongoDB connection string | `mongodb://shortlist:shortlist_secure_dev_pass_123@db:27017/shortlist?authSource=admin` |
+| `JWT_ACCESS_SECRET` | Secret key for access tokens (minimum 32 characters) | `shortlist_super_secret_jwt_access_token_key_at_least_32_characters` |
+| `JWT_REFRESH_SECRET` | Secret key for refresh tokens (minimum 32 characters) | `shortlist_super_secret_jwt_refresh_token_key_at_least_32_characters` |
+| `JWT_ACCESS_EXPIRES_IN` | Validity duration of access tokens | `15m` |
+| `JWT_REFRESH_EXPIRES_IN` | Validity duration of refresh tokens | `7d` |
+| `AI_PROVIDER` | AI engine mode: `mock` (zero-config testing) or `gemini` | `mock` |
+| `GEMINI_API_KEY` | API key from Google AI Studio (required if `AI_PROVIDER=gemini`) | `dummy_mock_key_for_testing` |
+| `GEMINI_MODEL` | Google Gemini model identifier | `gemini-1.5-flash` |
+| `MAX_CV_SIZE_MB` | Maximum allowed CV file upload size in megabytes | `5` |
+| `UPLOAD_DIR` | Local storage directory for uploaded resumes | `/app/uploads/cvs` |
 
-## 🧪 Testing & Quality Assurance
+### Demo Accounts
+The following accounts are generated by `backend/src/seed.ts` for local testing only. Never use these credentials in a public or production environment.
 
-CogniHire features comprehensive unit, controller, and E2E test suites with 100% pass rates:
+All seeded accounts use password: `Password123!`
 
+| Role | Email | Purpose |
+| :--- | :--- | :--- |
+| Admin | `admin@acme.com` | Full tenant management and user access |
+| Recruiter | `recruiter@acme.com` | Create jobs, review applicants, and score CVs |
+| Hiring Manager | `hiring@acme.com` | Review shortlisted candidates and schedule interviews |
+| Candidate | `candidate@example.com` | Browse open listings and submit applications |
+
+## Running Tests
+
+### Backend Unit and Integration Tests
 ```bash
-# Run backend unit & integration tests (145 passing tests)
 cd backend
-npm run test
+npm test
+```
+Runs 24 Jest test suites covering authentication, NoSQL sanitization, rate limiting, file upload validation, role guards, services, and controllers (133 total tests passing).
 
-# Run tests with coverage report
-npm run test:cov
+### Backend Linting
+```bash
+cd backend
+npm run lint
+```
+Checks backend TypeScript code formatting and lint rules.
 
-# Run backend & frontend linters
-cd backend && npm run lint
-cd frontend && npm run lint
+### Frontend Production Build
+```bash
+cd frontend
+npm run build
+```
+Type-checks TypeScript files and compiles the React production bundle using Vite.
+
+## Project Structure
+
+```text
+.
+├── backend/            # NestJS API application and business logic
+│   ├── src/            # Controllers, services, schemas, and guards
+│   └── test/           # End-to-end and integration test configuration
+├── frontend/           # React 18 single-page application
+│   ├── src/            # Components, pages, router, and Zustand stores
+│   └── public/         # Static web assets
+├── docs/               # System architecture and data privacy reference docs
+├── .github/            # GitHub Actions CI, CodeQL, and Dependabot workflows
+├── docker-compose.yml  # Production multi-stage Docker deployment setup
+└── docker-compose.dev.yml # Local development overlay for MongoDB port binding
 ```
 
----
+## Security
 
-## 📚 Documentation Vault
+- **Helmet HTTP headers**: Secures HTTP response headers against clickjacking, MIME sniffing, and cross-site scripting.
+- **Strict CORS policy**: Rejects requests from unauthorized origins and forbids wildcard origins when credentials are sent.
+- **Rate limiting**: Guards public routes with `@nestjs/throttler`, enforcing strict rate limits on login and registration endpoints.
+- **Global validation pipe**: Strips non-whitelisted request payload properties and transforms types using `class-validator`.
+- **NoSQL injection defense**: Inspects incoming request bodies and query parameters to strip or reject `$` operators and dotted paths.
+- **Password hashing**: Uses `bcrypt` with salt rounds to store salted password hashes rather than plaintext.
+- **JWT authentication**: Requires access and refresh tokens signed with distinct, validated secrets of at least 32 characters.
+- **Role-based access control**: Restricts endpoints by user role (admin, recruiter, hiring manager, candidate) using custom NestJS guards.
+- **Object-level permission checks**: Verifies that candidates can only access their own applications, resumes, and interview feedback.
+- **Secure file uploads**: Restricts CV uploads to 5 MB, verifies the `%PDF-` file magic bytes, and generates sanitized filenames to prevent path traversal.
+- **Production error masking**: Hides database connection strings and internal stack traces from clients via a global exception filter.
+- **Authenticated WebSockets**: Validates JWT bearer tokens during Socket.IO handshakes and isolates users to private notification rooms.
+- **Non-root Docker containers**: Runs both backend and frontend images under the unprivileged `node` user with read-only root filesystems and dropped Linux capabilities.
+- **Automated CI scanning**: Scans dependencies and git history for vulnerabilities and secret leaks using CodeQL, npm audit, and Gitleaks.
 
-Detailed system design and compliance specifications are located in `/docs`:
+## What I Learned and What I Would Improve Next
 
-- 📊 **[Entity Relationship Diagram (docs/ER_DIAGRAM.md)](file:///home/mustafa_muhammad/Eden/Project/talentbridge/docs/ER_DIAGRAM.md):** Complete PostgreSQL database schema.
-- 🔌 **[API Contract Specification (docs/API_CONTRACT.md)](file:///home/mustafa_muhammad/Eden/Project/talentbridge/docs/API_CONTRACT.md):** REST endpoints, headers, and response payloads.
-- 🤖 **[AI Integration & Prompt Engineering Report (docs/AI_INTEGRATION_REPORT.md)](file:///home/mustafa_muhammad/Eden/Project/talentbridge/docs/AI_INTEGRATION_REPORT.md):** Prompt iteration logs and JSON schema enforcement.
-- 📝 **[Engineering Build Log (docs/BUILD_LOG.md)](file:///home/mustafa_muhammad/Eden/Project/talentbridge/docs/BUILD_LOG.md):** Architecture decision record and phase progression.
-- 🛡️ **[Data Privacy & GDPR Policy (docs/DATA_PRIVACY.md)](file:///home/mustafa_muhammad/Eden/Project/talentbridge/docs/DATA_PRIVACY.md):** Candidate CV text handling & data security policies.
+- **Migrating from relational to document storage**: Moving from PostgreSQL to MongoDB taught me how to write MongoDB aggregation pipelines for stage statistics while keeping relational integrity through explicit ID references.
+- **Handling external AI failures**: Large language models can experience rate limits or network hiccups, so designing a mock fallback provider was essential for reliable testing and local development.
+- **Defense in depth for file uploads**: Validating MIME types alone is not enough; reading magic bytes from file buffers ensures uploaded files are genuine PDFs.
+- **What is still missing**: I would like to add an asynchronous job queue (such as BullMQ with Redis) for background resume processing and implement cloud object storage for uploaded files instead of local volume mounts.
 
----
+## Contributing and License
 
-## 📜 License
+- Guidelines for contributing can be found in [CONTRIBUTING.md](CONTRIBUTING.md).
+- Security policy and reporting instructions are documented in [SECURITY.md](SECURITY.md).
+- This project is open source and available under the [MIT License](LICENSE).
 
-Distributed under the MIT License. See `LICENSE` for more information.
+## Author
 
-<div align="center">
-
-**Built with ❤️ by [Mustafa Muhammad Iqbal](https://github.com/Mustafa-Hazard)**
-
-</div>
+Mustafa Muhammad Iqbal
+- GitHub: [github.com/Mustafa-Hazard](https://github.com/Mustafa-Hazard)
+- LinkedIn: [linkedin.com/in/mustafa642](https://www.linkedin.com/in/mustafa642)

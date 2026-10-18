@@ -1,12 +1,12 @@
-# CogniHire — AI Integration & Prompt Engineering Report
+# ShortList — AI Integration & Prompt Engineering Report
 
-This report documents the architectural design, prompt iteration evolution, JSON schema enforcement, error handling, and cost/latency optimizations across all 4 AI Features in CogniHire powered by Google Gemini API.
+This report documents the architectural design, prompt iteration evolution, JSON schema enforcement, error handling, and cost/latency optimizations across all 4 AI Features in ShortList powered by Google Gemini API.
 
 ---
 
 ## 1. Architectural Overview
 
-CogniHire encapsulates Gemini API interactions inside a centralized `AiProxyModule` (`AiProxyService`).
+ShortList encapsulates Gemini API interactions inside a centralized `AiProxyModule` (`AiProxyService`).
 
 ### Key Capabilities:
 1. **Model Selection:** `gemini-1.5-flash` for high-throughput extraction/scoring; `gemini-1.5-pro` capability fallback.

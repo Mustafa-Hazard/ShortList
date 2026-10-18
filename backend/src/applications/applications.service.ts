@@ -5,12 +5,12 @@ import {
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
-import { InjectRepository } from '@nestjs/typeorm';
-import { Repository, QueryFailedError, In } from 'typeorm';
-import { Application } from './application.entity';
+import { InjectModel } from '@nestjs/mongoose';
+import { Model } from 'mongoose';
+import { Application, ApplicationDocument } from './application.entity';
 import { ApplicationStage } from '../common/enums/application-stage.enum';
-import { JobStatus } from '../common/enums/job.enum';
 import { Role } from '../common/enums/role.enum';
+import { JobStatus } from '../common/enums/job.enum';
 import { User } from '../users/user.entity';
 import { JobsService } from '../jobs/jobs.service';
 import { CvScorerService } from './cv-scorer.service';
@@ -24,14 +24,13 @@ interface TransitionRule {
   roles: Role[];
 }
 
-// Each *edge* in the pipeline carries its own allowed roles, per the spec:
-// "recruiters screen, hiring managers shortlist and decide". Rejected is
-// reachable from any non-terminal stage but the role allowed to reject
-// still varies by how far along the pipeline the application is.
 const TRANSITIONS: Record<ApplicationStage, TransitionRule[]> = {
   [ApplicationStage.APPLIED]: [
     { to: ApplicationStage.SCREENED, roles: [Role.RECRUITER, Role.ADMIN] },
-    { to: ApplicationStage.REJECTED, roles: [Role.RECRUITER, Role.ADMIN] },
+    {
+      to: ApplicationStage.REJECTED,
+      roles: [Role.RECRUITER, Role.HIRING_MANAGER, Role.ADMIN],
+    },
   ],
   [ApplicationStage.SCREENED]: [
     {
@@ -71,13 +70,11 @@ const TRANSITIONS: Record<ApplicationStage, TransitionRule[]> = {
   [ApplicationStage.REJECTED]: [],
 };
 
-const UNIQUE_VIOLATION = '23505';
-
 @Injectable()
 export class ApplicationsService {
   constructor(
-    @InjectRepository(Application)
-    private applicationsRepo: Repository<Application>,
+    @InjectModel(Application.name)
+    private applicationModel: Model<ApplicationDocument>,
     private jobsService: JobsService,
     private cvScorerService: CvScorerService,
     private notificationsService: NotificationsService,
@@ -87,9 +84,6 @@ export class ApplicationsService {
     dto: CreateApplicationDto,
     candidate: User,
   ): Promise<Application> {
-    // Reuses JobsService.findOne, which already throws 404 for anything
-    // non-published when called as a candidate — so an application can
-    // never be created against a draft/closed/archived posting.
     const posting = await this.jobsService.findOne(dto.jobPostingId, candidate);
     if (posting.status !== JobStatus.PUBLISHED) {
       throw new BadRequestException(
@@ -97,23 +91,19 @@ export class ApplicationsService {
       );
     }
 
-    const application = this.applicationsRepo.create({
-      jobPostingId: dto.jobPostingId,
-      candidateId: candidate.id,
-      coverLetter: dto.coverLetter ?? null,
-      yearsOfExperience: dto.yearsOfExperience ?? null,
-      salaryExpectation: dto.salaryExpectation ?? null,
-      availabilityDate: dto.availabilityDate ?? null,
-      stage: ApplicationStage.APPLIED,
-    });
-
     try {
-      return await this.applicationsRepo.save(application);
-    } catch (err) {
-      if (
-        err instanceof QueryFailedError &&
-        (err as any).driverError?.code === UNIQUE_VIOLATION
-      ) {
+      const application = await this.applicationModel.create({
+        jobPostingId: dto.jobPostingId,
+        candidateId: candidate.id,
+        coverLetter: dto.coverLetter ?? null,
+        yearsOfExperience: dto.yearsOfExperience ?? null,
+        salaryExpectation: dto.salaryExpectation ?? null,
+        availabilityDate: dto.availabilityDate ?? null,
+        stage: ApplicationStage.APPLIED,
+      });
+      return application.toObject();
+    } catch (err: any) {
+      if (err.code === 11000) {
         throw new ConflictException(
           'You have already applied to this job posting',
         );
@@ -123,11 +113,13 @@ export class ApplicationsService {
   }
 
   async findMine(candidate: User): Promise<Application[]> {
-    return this.applicationsRepo.find({
-      where: { candidateId: candidate.id },
-      relations: { candidate: true, jobPosting: true, cv: true },
-      order: { createdAt: 'DESC' },
-    });
+    return this.applicationModel
+      .find({ candidateId: candidate.id })
+      .populate('candidate')
+      .populate('jobPosting')
+      .populate('cv')
+      .sort({ createdAt: -1 })
+      .exec();
   }
 
   async findForPosting(
@@ -138,35 +130,51 @@ export class ApplicationsService {
       const jobs = await this.jobsService.findAll({}, user);
       const jobIds = jobs.map((j) => j.id);
       if (jobIds.length === 0) return [];
-      return this.applicationsRepo.find({
-        where: {
-          jobPostingId: In(jobIds),
-          ...(query.stage ? { stage: query.stage } : {}),
-        },
-        relations: { candidate: true, jobPosting: true, cv: true },
-        order: { aiScore: { direction: 'DESC', nulls: 'LAST' } as any },
-      });
+      const filter: Record<string, any> = { jobPostingId: { $in: jobIds } };
+      if (query.stage && typeof query.stage === 'string') {
+        filter.stage = { $eq: String(query.stage) };
+      }
+      return this.applicationModel
+        .find(filter)
+        .populate('candidate')
+        .populate('jobPosting')
+        .populate('cv')
+        .sort({ aiScore: -1 })
+        .exec();
     }
-    // Confirms the posting belongs to the staff member's company — throws
-    // 403/404 exactly as JobsController's own routes would.
-    await this.jobsService.findOne(query.jobPostingId, user);
 
-    return this.applicationsRepo.find({
-      where: {
-        jobPostingId: query.jobPostingId,
-        ...(query.stage ? { stage: query.stage } : {}),
-      },
-      relations: { candidate: true, jobPosting: true, cv: true },
-      // Shortlist sorted by AI score by default (nulls last), per spec.
-      order: { aiScore: { direction: 'DESC', nulls: 'LAST' } as any },
-    });
+    if (
+      typeof query.jobPostingId !== 'string' ||
+      !/^[a-zA-Z0-9-]+$/.test(query.jobPostingId)
+    ) {
+      throw new BadRequestException('Invalid job posting ID');
+    }
+    await this.jobsService.findOne(query.jobPostingId, user);
+    const filter: Record<string, any> = {
+      jobPostingId: { $eq: String(query.jobPostingId) },
+    };
+    if (query.stage && typeof query.stage === 'string') {
+      filter.stage = { $eq: String(query.stage) };
+    }
+    return this.applicationModel
+      .find(filter)
+      .populate('candidate')
+      .populate('jobPosting')
+      .populate('cv')
+      .sort({ aiScore: -1 })
+      .exec();
   }
 
   async findOne(id: string, user: User): Promise<Application> {
-    const application = await this.applicationsRepo.findOne({
-      where: { id },
-      relations: { candidate: true, jobPosting: true, cv: true },
-    });
+    if (typeof id !== 'string' || !/^[a-zA-Z0-9-]+$/.test(id)) {
+      throw new BadRequestException('Invalid application ID');
+    }
+    const application = await this.applicationModel
+      .findById(id)
+      .populate('candidate')
+      .populate('jobPosting')
+      .populate('cv')
+      .exec();
     if (!application) throw new NotFoundException('Application not found');
 
     if (user.role === Role.CANDIDATE) {
@@ -176,7 +184,6 @@ export class ApplicationsService {
       return application;
     }
 
-    // Staff: confirm the owning posting belongs to their company.
     await this.jobsService.findOne(application.jobPostingId, user);
     return application;
   }
@@ -189,7 +196,7 @@ export class ApplicationsService {
     const application = await this.getOwnedForStaff(id, user);
     this.assertTransitionAllowed(application.stage, target, user.role);
     application.stage = target;
-    await this.applicationsRepo.save(application);
+    await application.save();
     const saved = await this.findOne(id, user);
 
     try {
@@ -220,9 +227,6 @@ export class ApplicationsService {
     const succeeded: string[] = [];
     const failed: { id: string; reason: string }[] = [];
 
-    // Sequential rather than Promise.all: each row's failure (wrong company,
-    // invalid transition) must not affect the others, and we want a clear
-    // per-id result rather than one failure aborting the whole batch.
     for (const id of ids) {
       try {
         await this.transition(id, target, user);
@@ -239,15 +243,17 @@ export class ApplicationsService {
   }
 
   async scoreApplication(id: string, user: User): Promise<Application> {
-    const application = await this.applicationsRepo.findOne({
-      where: { id },
-      relations: { candidate: true, jobPosting: true, cv: true },
-    });
+    const application = await this.applicationModel
+      .findById(id)
+      .populate('candidate')
+      .populate('jobPosting')
+      .populate('cv')
+      .exec();
     if (!application) throw new NotFoundException('Application not found');
     await this.jobsService.findOne(application.jobPostingId, user);
 
     const scoreResult = await this.cvScorerService.score({
-      jobPosting: application.jobPosting,
+      jobPosting: application.jobPosting as any,
       cvText: application.cv?.extractedText ?? null,
       coverLetter: application.coverLetter,
       yearsOfExperience: application.yearsOfExperience,
@@ -259,7 +265,7 @@ export class ApplicationsService {
     application.aiStrengths = scoreResult.aiStrengths;
     application.aiGaps = scoreResult.aiGaps;
 
-    await this.applicationsRepo.save(application);
+    await application.save();
     return this.findOne(id, user);
   }
 
@@ -279,13 +285,20 @@ export class ApplicationsService {
     }
   }
 
-  private async getOwnedForStaff(id: string, user: User): Promise<Application> {
-    const application = await this.applicationsRepo.findOne({
-      where: { id },
-      relations: { candidate: true, jobPosting: true, cv: true },
-    });
+  private async getOwnedForStaff(
+    id: string,
+    user: User,
+  ): Promise<ApplicationDocument> {
+    if (typeof id !== 'string' || !/^[a-zA-Z0-9-]+$/.test(id)) {
+      throw new BadRequestException('Invalid application ID');
+    }
+    const application = await this.applicationModel
+      .findById(id)
+      .populate('candidate')
+      .populate('jobPosting')
+      .populate('cv')
+      .exec();
     if (!application) throw new NotFoundException('Application not found');
-    // Throws 403/404 if this staff member's company doesn't own the posting.
     await this.jobsService.findOne(application.jobPostingId, user);
     return application;
   }

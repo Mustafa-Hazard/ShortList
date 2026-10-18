@@ -1,6 +1,6 @@
-# CogniHire — Entity Relationship (ER) Diagram
+# ShortList — Entity Relationship (ER) Diagram
 
-This document contains the relational database schema diagram and entity specifications for the CogniHire recruitment platform.
+This document contains the relational database schema diagram and entity specifications for the ShortList recruitment platform.
 
 ```mermaid
 erDiagram

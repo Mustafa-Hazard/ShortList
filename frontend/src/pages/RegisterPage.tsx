@@ -71,7 +71,7 @@ export function RegisterPage() {
           <div style={{ marginBottom: '1.5rem' }}>
             <h2 style={{ fontSize: '1.5rem', fontWeight: 800 }}>Account Registration</h2>
             <p style={{ color: 'var(--fg-muted)', fontSize: '0.8125rem', marginTop: '0.2rem' }}>
-              Register account access to CogniHire transit line
+              Register account access to ShortList transit line
             </p>
           </div>
 

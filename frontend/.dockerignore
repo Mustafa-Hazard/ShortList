@@ -1,0 +1,11 @@
+node_modules
+.git
+.env*
+dist
+tests
+test
+docs
+logs
+coverage
+*.log
+.DS_Store

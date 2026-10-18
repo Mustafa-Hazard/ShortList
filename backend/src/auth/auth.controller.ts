@@ -1,3 +1,4 @@
+import { Throttle } from '@nestjs/throttler';
 import {
   Body,
   Controller,
@@ -21,24 +22,28 @@ import { User } from '../users/user.entity';
 export class AuthController {
   constructor(private authService: AuthService) {}
 
+  @Throttle({ default: { limit: 5, ttl: 60000 } })
   @Public()
   @Post('register')
   register(@Body() dto: RegisterDto) {
     return this.authService.register(dto);
   }
 
+  @Throttle({ default: { limit: 5, ttl: 60000 } })
   @Public()
   @Post('register/candidate')
   registerCandidate(@Body() dto: RegisterDto) {
     return this.authService.register({ ...dto, role: Role.CANDIDATE });
   }
 
+  @Throttle({ default: { limit: 5, ttl: 60000 } })
   @Public()
   @Post('register/recruiter')
   registerRecruiter(@Body() dto: RegisterDto) {
     return this.authService.register({ ...dto, role: Role.RECRUITER });
   }
 
+  @Throttle({ default: { limit: 5, ttl: 60000 } })
   @Public()
   @HttpCode(HttpStatus.OK)
   @Post('login')

@@ -52,7 +52,7 @@ export function TransitLine({
         }}
       >
         <span className="mono-tag tag-brass" style={{ fontSize: '0.7rem' }}>
-          COGNIHIRE LINE 01 // STAGE TRANSIT CONTROL
+          SHORTLIST LINE 01 // STAGE TRANSIT CONTROL
         </span>
         <div style={{ display: 'flex', gap: '1rem', fontSize: '0.7rem', color: 'var(--fg-muted)', fontFamily: 'var(--font-mono)' }}>
           <span>● RECRUITER GATE</span>

@@ -1,3 +1,8 @@
+import { MiddlewareConsumer, NestModule } from '@nestjs/common';
+import { NoSqlSanitizeMiddleware } from './common/middleware/nosql-sanitize.middleware';
+import { ThrottlerModule, ThrottlerGuard } from '@nestjs/throttler';
+import { validateEnv } from './config/env.validation';
+import { HealthController } from './health/health.controller';
 import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
 import { APP_GUARD } from '@nestjs/core';
@@ -15,8 +20,9 @@ import { JwtAuthGuard } from './common/guards/jwt-auth.guard';
 import { RolesGuard } from './common/guards/roles.guard';
 
 @Module({
+  controllers: [HealthController],
   imports: [
-    ConfigModule.forRoot({ isGlobal: true }),
+    ConfigModule.forRoot({ isGlobal: true, validate: validateEnv }),
     DatabaseModule,
     AuthModule,
     UsersModule,
@@ -27,6 +33,12 @@ import { RolesGuard } from './common/guards/roles.guard';
     InterviewsModule,
     OffersModule,
     NotificationsModule,
+    ThrottlerModule.forRoot([
+      {
+        ttl: 60000,
+        limit: 100,
+      },
+    ]),
   ],
   providers: [
     // Every route requires a valid JWT by default (opt out with @Public()),
@@ -34,6 +46,11 @@ import { RolesGuard } from './common/guards/roles.guard';
     // per-route with @Roles(...)).
     { provide: APP_GUARD, useClass: JwtAuthGuard },
     { provide: APP_GUARD, useClass: RolesGuard },
+    { provide: APP_GUARD, useClass: ThrottlerGuard },
   ],
 })
-export class AppModule {}
+export class AppModule implements NestModule {
+  configure(consumer: MiddlewareConsumer) {
+    consumer.apply(NoSqlSanitizeMiddleware).forRoutes('*');
+  }
+}
