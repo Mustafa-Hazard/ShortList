@@ -1,3 +1,4 @@
+import { validateEnv } from './config/env.validation';
 import { HealthController } from './health/health.controller';
 import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
@@ -18,7 +19,7 @@ import { RolesGuard } from './common/guards/roles.guard';
 @Module({
   controllers: [HealthController],
   imports: [
-    ConfigModule.forRoot({ isGlobal: true }),
+    ConfigModule.forRoot({ isGlobal: true, validate: validateEnv }),
     DatabaseModule,
     AuthModule,
     UsersModule,
