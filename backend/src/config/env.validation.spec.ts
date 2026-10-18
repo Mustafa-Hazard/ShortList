@@ -3,8 +3,10 @@ import { validateEnv } from './env.validation';
 describe('validateEnv', () => {
   const validConfig = {
     MONGODB_URI: 'mongodb://localhost:27017/shortlist',
-    JWT_ACCESS_SECRET: 'a_very_long_jwt_secret_that_is_at_least_32_characters_long',
-    JWT_REFRESH_SECRET: 'another_very_long_jwt_secret_that_is_at_least_32_chars',
+    JWT_ACCESS_SECRET:
+      'a_very_long_jwt_secret_that_is_at_least_32_characters_long',
+    JWT_REFRESH_SECRET:
+      'another_very_long_jwt_secret_that_is_at_least_32_chars',
     PORT: 3000,
     CORS_ORIGIN: 'http://localhost:5173',
   };
@@ -27,9 +29,8 @@ describe('validateEnv', () => {
   });
 
   it('fails fast when MONGODB_URI is missing', () => {
-    const { MONGODB_URI, ...missingDbConfig } = validConfig;
-    expect(() => validateEnv(missingDbConfig)).toThrow(
-      /MONGODB_URI/,
-    );
+    const { MONGODB_URI: _unused, ...missingDbConfig } = validConfig;
+    void _unused;
+    expect(() => validateEnv(missingDbConfig)).toThrow(/MONGODB_URI/);
   });
 });

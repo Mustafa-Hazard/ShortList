@@ -1,5 +1,5 @@
 import { BadRequestException } from '@nestjs/common';
-import { sanitizeInput, NoSqlSanitizeMiddleware } from './nosql-sanitize.middleware';
+import { NoSqlSanitizeMiddleware } from './nosql-sanitize.middleware';
 import type { Request, Response } from 'express';
 
 describe('NoSqlSanitizeMiddleware', () => {
@@ -19,7 +19,11 @@ describe('NoSqlSanitizeMiddleware', () => {
 
     middleware.use(req, {} as Response, next);
     expect(next).toHaveBeenCalled();
-    expect(req.body).toEqual({ email: 'user@example.com', name: 'John Doe', age: 30 });
+    expect(req.body).toEqual({
+      email: 'user@example.com',
+      name: 'John Doe',
+      age: 30,
+    });
   });
 
   it('throws BadRequestException when body contains $-prefixed operator keys', () => {

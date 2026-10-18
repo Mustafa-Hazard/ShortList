@@ -30,7 +30,9 @@ async function bootstrap() {
   );
 
   // Strict CORS allow-list (no wildcard * with credentials)
-  const configuredOrigins = (config.get<string>('CORS_ORIGIN') || 'http://localhost:5173')
+  const configuredOrigins = (
+    config.get<string>('CORS_ORIGIN') || 'http://localhost:5173'
+  )
     .split(',')
     .map((o) => o.trim())
     .filter(Boolean);
@@ -45,7 +47,9 @@ async function bootstrap() {
         return callback(null, true);
       }
       return callback(
-        new Error(`CORS policy violation: Origin ${requestOrigin} is not in the allow-list`),
+        new Error(
+          `CORS policy violation: Origin ${requestOrigin} is not in the allow-list`,
+        ),
         false,
       );
     },

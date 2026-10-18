@@ -53,7 +53,10 @@ export class CvService {
     }
 
     // Sanitize filename to prevent path traversal or control character injection
-    const sanitizedFilename = basename(file.originalname).replace(/[\r\n\0]/g, '');
+    const sanitizedFilename = basename(file.originalname).replace(
+      /[\r\n\0]/g,
+      '',
+    );
 
     let extractedText: string | null = null;
     try {

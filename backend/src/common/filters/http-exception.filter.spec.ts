@@ -21,7 +21,10 @@ describe('HttpExceptionFilter', () => {
   });
 
   it('formats standard HttpException responses correctly', () => {
-    const exception = new HttpException('Forbidden resource', HttpStatus.FORBIDDEN);
+    const exception = new HttpException(
+      'Forbidden resource',
+      HttpStatus.FORBIDDEN,
+    );
     filter.catch(exception, mockHost);
 
     expect(mockStatus).toHaveBeenCalledWith(HttpStatus.FORBIDDEN);
@@ -37,7 +40,9 @@ describe('HttpExceptionFilter', () => {
     const originalEnv = process.env.NODE_ENV;
     process.env.NODE_ENV = 'production';
     try {
-      const secretDbError = new Error('FATAL: Database connection string mongodb://secret:pass failed');
+      const secretDbError = new Error(
+        'FATAL: Database connection string mongodb://secret:pass failed',
+      );
       filter.catch(secretDbError, mockHost);
 
       expect(mockStatus).toHaveBeenCalledWith(HttpStatus.INTERNAL_SERVER_ERROR);

@@ -29,7 +29,9 @@ export class HttpExceptionFilter implements ExceptionFilter {
     if (isHttp) {
       const res = exception.getResponse();
       errorPayload =
-        typeof res === 'object' ? (res as Record<string, any>) : { message: res };
+        typeof res === 'object'
+          ? (res as Record<string, any>)
+          : { message: res };
     } else {
       errorPayload = {
         statusCode: HttpStatus.INTERNAL_SERVER_ERROR,

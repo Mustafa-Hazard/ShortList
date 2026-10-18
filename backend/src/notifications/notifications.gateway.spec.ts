@@ -11,10 +11,14 @@ describe('NotificationsGateway', () => {
 
   beforeEach(async () => {
     jwtService = {
-      verifyAsync: jest.fn().mockResolvedValue({ sub: 'user-123', email: 'test@example.com' }),
+      verifyAsync: jest
+        .fn()
+        .mockResolvedValue({ sub: 'user-123', email: 'test@example.com' }),
     };
     configService = {
-      get: jest.fn().mockReturnValue('super_secret_jwt_key_at_least_32_characters_long'),
+      get: jest
+        .fn()
+        .mockReturnValue('super_secret_jwt_key_at_least_32_characters_long'),
     };
 
     const module: TestingModule = await Test.createTestingModule({
@@ -44,7 +48,9 @@ describe('NotificationsGateway', () => {
   });
 
   it('disconnects unauthenticated clients when JWT is invalid', async () => {
-    (jwtService.verifyAsync as jest.Mock).mockRejectedValue(new Error('Invalid token'));
+    (jwtService.verifyAsync as jest.Mock).mockRejectedValue(
+      new Error('Invalid token'),
+    );
     const mockSocket: any = {
       handshake: { auth: { token: 'bad-token' } },
       join: jest.fn(),

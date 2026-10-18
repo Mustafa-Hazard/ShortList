@@ -30,9 +30,14 @@ describe('AuthController', () => {
     const keys = Reflect.getMetadataKeys(AuthController.prototype.login);
     expect(keys.length).toBeGreaterThan(0);
     // Find throttler options in metadata
-    const throttlerKey = keys.find((k: string) => k.includes('THROTTLER') || k.includes('throttler'));
+    const throttlerKey = keys.find(
+      (k: string) => k.includes('THROTTLER') || k.includes('throttler'),
+    );
     expect(throttlerKey).toBeDefined();
-    const metadata = Reflect.getMetadata(throttlerKey, AuthController.prototype.login);
+    const metadata = Reflect.getMetadata(
+      throttlerKey,
+      AuthController.prototype.login,
+    );
     expect(metadata).toBeDefined();
   });
 });

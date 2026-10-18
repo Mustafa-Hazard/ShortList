@@ -13,7 +13,9 @@ import { Role } from '../common/enums/role.enum';
 import * as fsPromises from 'fs/promises';
 
 jest.mock('fs/promises', () => ({
-  readFile: jest.fn().mockResolvedValue(Buffer.from('%PDF-1.7 mock valid pdf stream')),
+  readFile: jest
+    .fn()
+    .mockResolvedValue(Buffer.from('%PDF-1.7 mock valid pdf stream')),
   unlink: jest.fn().mockResolvedValue(undefined),
 }));
 

@@ -58,7 +58,7 @@ export class NotificationsGateway implements OnGatewayConnection {
       if (this.jwtService && !client.data?.user) {
         client.disconnect(true);
       }
-    } catch (err) {
+    } catch {
       client.disconnect(true);
     }
   }
