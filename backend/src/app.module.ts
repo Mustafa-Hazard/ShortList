@@ -1,3 +1,4 @@
+import { ThrottlerModule, ThrottlerGuard } from '@nestjs/throttler';
 import { validateEnv } from './config/env.validation';
 import { HealthController } from './health/health.controller';
 import { Module } from '@nestjs/common';
@@ -30,6 +31,12 @@ import { RolesGuard } from './common/guards/roles.guard';
     InterviewsModule,
     OffersModule,
     NotificationsModule,
+    ThrottlerModule.forRoot([
+      {
+        ttl: 60000,
+        limit: 100,
+      },
+    ]),
   ],
   providers: [
     // Every route requires a valid JWT by default (opt out with @Public()),
@@ -37,6 +44,7 @@ import { RolesGuard } from './common/guards/roles.guard';
     // per-route with @Roles(...)).
     { provide: APP_GUARD, useClass: JwtAuthGuard },
     { provide: APP_GUARD, useClass: RolesGuard },
+    { provide: APP_GUARD, useClass: ThrottlerGuard },
   ],
 })
 export class AppModule {}
