@@ -35,7 +35,10 @@ export class AiProxyService {
   ): Promise<string> {
     if (process.env.AI_PROVIDER === 'mock') {
       const lower = prompt.toLowerCase();
-      if (lower.includes('evaluate') || lower.includes('candidate application')) {
+      if (
+        lower.includes('evaluate') ||
+        lower.includes('candidate application')
+      ) {
         return JSON.stringify({
           aiScore: 88,
           aiExtraction: {
@@ -51,7 +54,11 @@ export class AiProxyService {
       }
       if (lower.includes('question') || lower.includes('interview')) {
         return JSON.stringify([
-          { question: 'Tell me about your NestJS experience?', topic: 'Backend', difficulty: 'Mid' }
+          {
+            question: 'Tell me about your NestJS experience?',
+            topic: 'Backend',
+            difficulty: 'Mid',
+          },
         ]);
       }
       if (lower.includes('offer')) {
