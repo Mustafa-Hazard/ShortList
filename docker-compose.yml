@@ -2,22 +2,33 @@ version: "3.9"
 
 services:
   db:
-    image: mongo:7.0
+    image: mongo:7.0.14
     container_name: shortlist-mongo
     restart: unless-stopped
+    security_opt:
+      - no-new-privileges:true
     environment:
-      MONGO_INITDB_ROOT_USERNAME: shortlist
-      MONGO_INITDB_ROOT_PASSWORD: shortlist
-      MONGO_INITDB_DATABASE: shortlist
-    ports:
-      - "27017:27017"
+      MONGO_INITDB_ROOT_USERNAME: ${MONGO_USER:?MONGO_USER is required}
+      MONGO_INITDB_ROOT_PASSWORD: ${MONGO_PASSWORD:?MONGO_PASSWORD is required}
+      MONGO_INITDB_DATABASE: ${MONGO_DB:?MONGO_DB is required}
     volumes:
       - shortlist-mongo-data:/data/db
+    networks:
+      - internal_net
     healthcheck:
       test: ["CMD", "mongosh", "--eval", "db.adminCommand('ping')"]
-      interval: 5s
+      interval: 10s
       timeout: 5s
-      retries: 10
+      retries: 5
+      start_period: 10s
+    deploy:
+      resources:
+        limits:
+          cpus: "1.5"
+          memory: 1024M
+        reservations:
+          cpus: "0.2"
+          memory: 256M
 
   backend:
     build:
@@ -25,18 +36,73 @@ services:
       dockerfile: Dockerfile
     container_name: shortlist-backend
     restart: unless-stopped
+    security_opt:
+      - no-new-privileges:true
+    cap_drop:
+      - ALL
+    read_only: true
+    tmpfs:
+      - /tmp:rw,noexec,nosuid,size=64m
+      - /app/uploads:rw,nosuid,uid=1000,gid=1000,size=256m
     depends_on:
       db:
         condition: service_healthy
-    env_file:
-      - ./backend/.env
     environment:
-      MONGODB_URI: mongodb://shortlist:shortlist@db:27017/shortlist?authSource=admin
+      NODE_ENV: production
       PORT: 3000
+      MONGODB_URI: ${MONGODB_URI:?MONGODB_URI is required}
+      JWT_ACCESS_SECRET: ${JWT_ACCESS_SECRET:?JWT_ACCESS_SECRET is required}
+      JWT_REFRESH_SECRET: ${JWT_REFRESH_SECRET:?JWT_REFRESH_SECRET is required}
+      JWT_ACCESS_EXPIRES_IN: ${JWT_ACCESS_EXPIRES_IN:-15m}
+      JWT_REFRESH_EXPIRES_IN: ${JWT_REFRESH_EXPIRES_IN:-7d}
+      AI_PROVIDER: ${AI_PROVIDER:-mock}
+      GEMINI_API_KEY: ${GEMINI_API_KEY:-mock}
+      GEMINI_MODEL: ${GEMINI_MODEL:-gemini-1.5-flash}
+      CORS_ORIGIN: ${CORS_ORIGIN:-http://localhost:5173}
+      MAX_CV_SIZE_MB: ${MAX_CV_SIZE_MB:-5}
+      UPLOAD_DIR: /app/uploads/cvs
     ports:
       - "3000:3000"
-    command: >
-      sh -c "npm run start:prod"
+    networks:
+      - internal_net
+    deploy:
+      resources:
+        limits:
+          cpus: "1.5"
+          memory: 1024M
+        reservations:
+          cpus: "0.2"
+          memory: 256M
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: shortlist-frontend
+    restart: unless-stopped
+    security_opt:
+      - no-new-privileges:true
+    cap_drop:
+      - ALL
+    read_only: true
+    tmpfs:
+      - /tmp:rw,noexec,nosuid,size=32m
+    ports:
+      - "5173:5173"
+    networks:
+      - internal_net
+    deploy:
+      resources:
+        limits:
+          cpus: "1.0"
+          memory: 512M
+        reservations:
+          cpus: "0.1"
+          memory: 128M
+
+networks:
+  internal_net:
+    driver: bridge
 
 volumes:
   shortlist-mongo-data:
