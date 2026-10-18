@@ -1,3 +1,5 @@
+import { MiddlewareConsumer, NestModule } from '@nestjs/common';
+import { NoSqlSanitizeMiddleware } from './common/middleware/nosql-sanitize.middleware';
 import { ThrottlerModule, ThrottlerGuard } from '@nestjs/throttler';
 import { validateEnv } from './config/env.validation';
 import { HealthController } from './health/health.controller';
@@ -47,4 +49,8 @@ import { RolesGuard } from './common/guards/roles.guard';
     { provide: APP_GUARD, useClass: ThrottlerGuard },
   ],
 })
-export class AppModule {}
+export class AppModule implements NestModule {
+  configure(consumer: MiddlewareConsumer) {
+    consumer.apply(NoSqlSanitizeMiddleware).forRoutes('*');
+  }
+}
