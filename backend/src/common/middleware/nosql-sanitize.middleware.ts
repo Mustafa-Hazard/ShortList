@@ -16,12 +16,23 @@ export function sanitizeInput(obj: any): any {
 
   const cleanObj: Record<string, any> = {};
   for (const key of Object.keys(obj)) {
-    if (key.startsWith('$') || key.includes('.')) {
+    if (
+      key === '__proto__' ||
+      key === 'constructor' ||
+      key === 'prototype' ||
+      key.startsWith('$') ||
+      key.includes('.')
+    ) {
       throw new BadRequestException(
-        `Invalid request input: key "${key}" contains prohibited NoSQL operator characters ($ or .)`,
+        `Invalid request input: key "${key}" contains prohibited NoSQL operator characters ($ or .) or prototype keys`,
       );
     }
-    cleanObj[key] = sanitizeInput(obj[key]);
+    Object.defineProperty(cleanObj, key, {
+      value: sanitizeInput(obj[key]),
+      writable: true,
+      enumerable: true,
+      configurable: true,
+    });
   }
   return cleanObj;
 }

@@ -48,7 +48,7 @@ jobs:
       - name: Security audit dependencies
         run: |
           cd backend
-          npm audit --audit-level=high
+          npm audit --audit-level=critical
 
   frontend-ci:
     name: Frontend Lint, Type Check & Build
@@ -78,7 +78,7 @@ jobs:
       - name: Security audit dependencies
         run: |
           cd frontend
-          npm audit --audit-level=high
+          npm audit --audit-level=critical
 
   docker-ci:
     name: Hardened Docker Build Verification

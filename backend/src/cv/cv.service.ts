@@ -39,24 +39,31 @@ export class CvService {
       );
     }
 
+    if (
+      typeof file.path !== 'string' ||
+      file.path.includes('\0') ||
+      !/^[a-zA-Z0-9/\\._-]+$/.test(file.path)
+    ) {
+      throw new BadRequestException('Invalid file path');
+    }
+    const safeFilePath = file.path;
+
     // Validate PDF magic bytes (%PDF-) to prevent malicious non-PDF uploads
-    const buffer = await readFile(file.path);
+    const buffer = await readFile(safeFilePath);
     if (
       !buffer ||
       buffer.length < 5 ||
       buffer.subarray(0, 5).toString('ascii') !== '%PDF-'
     ) {
-      await unlink(file.path).catch(() => undefined);
+      await unlink(safeFilePath).catch(() => undefined);
       throw new BadRequestException(
         'Uploaded file is not a valid PDF document (invalid magic bytes)',
       );
     }
 
     // Sanitize filename to prevent path traversal or control character injection
-    const sanitizedFilename = basename(file.originalname).replace(
-      /[\r\n\0]/g,
-      '',
-    );
+    const rawBaseName = basename(file.originalname || 'document.pdf');
+    const sanitizedFilename = rawBaseName.replace(/[^a-zA-Z0-9._-]/g, '_');
 
     let extractedText: string | null = null;
     try {
@@ -73,14 +80,14 @@ export class CvService {
       const cv = await this.cvModel.create({
         applicationId,
         originalFilename: sanitizedFilename,
-        storagePath: file.path,
+        storagePath: safeFilePath,
         fileSizeBytes: file.size,
         extractedText,
         uploadedAt: new Date(),
       });
       return cv.toObject();
     } catch (err: any) {
-      await unlink(file.path).catch(() => undefined);
+      await unlink(safeFilePath).catch(() => undefined);
       if (err.code === 11000) {
         throw new BadRequestException(
           'A CV has already been uploaded for this application',

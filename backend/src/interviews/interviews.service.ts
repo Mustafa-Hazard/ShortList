@@ -37,6 +37,12 @@ export class InterviewsService {
   ) {}
 
   async schedule(dto: ScheduleInterviewDto, user: User): Promise<Interview> {
+    if (
+      typeof dto.applicationId !== 'string' ||
+      !/^[a-zA-Z0-9-]+$/.test(dto.applicationId)
+    ) {
+      throw new BadRequestException('Invalid application ID');
+    }
     const application = await this.applicationModel
       .findById(dto.applicationId)
       .exec();

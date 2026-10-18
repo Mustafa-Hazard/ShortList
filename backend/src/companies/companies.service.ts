@@ -1,4 +1,8 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import {
+  BadRequestException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import { Company, CompanyDocument } from './company.entity';
@@ -15,6 +19,9 @@ export class CompaniesService {
   }
 
   async findById(id: string): Promise<Company> {
+    if (typeof id !== 'string' || !/^[a-zA-Z0-9-]+$/.test(id)) {
+      throw new BadRequestException('Invalid company ID');
+    }
     const company = await this.companyModel.findById(id).exec();
     if (!company) throw new NotFoundException('Company not found');
     return company;

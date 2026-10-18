@@ -36,6 +36,12 @@ export class OffersService {
   ) {}
 
   async create(dto: CreateOfferDto, user: User): Promise<Offer> {
+    if (
+      typeof dto.applicationId !== 'string' ||
+      !/^[a-zA-Z0-9-]+$/.test(dto.applicationId)
+    ) {
+      throw new BadRequestException('Invalid application ID');
+    }
     const application = await this.applicationModel
       .findById(dto.applicationId)
       .populate('candidate')
@@ -46,7 +52,7 @@ export class OffersService {
     await this.jobsService.findOne(application.jobPostingId, user);
 
     const existing = await this.offerModel
-      .findOne({ applicationId: dto.applicationId })
+      .findOne({ applicationId: { $eq: String(dto.applicationId) } })
       .exec();
     if (existing) {
       throw new ConflictException(

@@ -131,7 +131,9 @@ export class ApplicationsService {
       const jobIds = jobs.map((j) => j.id);
       if (jobIds.length === 0) return [];
       const filter: Record<string, any> = { jobPostingId: { $in: jobIds } };
-      if (query.stage) filter.stage = query.stage;
+      if (query.stage && typeof query.stage === 'string') {
+        filter.stage = { $eq: String(query.stage) };
+      }
       return this.applicationModel
         .find(filter)
         .populate('candidate')
@@ -141,9 +143,19 @@ export class ApplicationsService {
         .exec();
     }
 
+    if (
+      typeof query.jobPostingId !== 'string' ||
+      !/^[a-zA-Z0-9-]+$/.test(query.jobPostingId)
+    ) {
+      throw new BadRequestException('Invalid job posting ID');
+    }
     await this.jobsService.findOne(query.jobPostingId, user);
-    const filter: Record<string, any> = { jobPostingId: query.jobPostingId };
-    if (query.stage) filter.stage = query.stage;
+    const filter: Record<string, any> = {
+      jobPostingId: { $eq: String(query.jobPostingId) },
+    };
+    if (query.stage && typeof query.stage === 'string') {
+      filter.stage = { $eq: String(query.stage) };
+    }
     return this.applicationModel
       .find(filter)
       .populate('candidate')
@@ -154,6 +166,9 @@ export class ApplicationsService {
   }
 
   async findOne(id: string, user: User): Promise<Application> {
+    if (typeof id !== 'string' || !/^[a-zA-Z0-9-]+$/.test(id)) {
+      throw new BadRequestException('Invalid application ID');
+    }
     const application = await this.applicationModel
       .findById(id)
       .populate('candidate')
@@ -274,6 +289,9 @@ export class ApplicationsService {
     id: string,
     user: User,
   ): Promise<ApplicationDocument> {
+    if (typeof id !== 'string' || !/^[a-zA-Z0-9-]+$/.test(id)) {
+      throw new BadRequestException('Invalid application ID');
+    }
     const application = await this.applicationModel
       .findById(id)
       .populate('candidate')

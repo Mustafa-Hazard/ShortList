@@ -102,6 +102,12 @@ export class JobsService {
       filter.companyId = user.companyId;
     }
     if (query.status) {
+      if (
+        typeof query.status !== 'string' ||
+        !/^[a-zA-Z0-9_-]+$/.test(query.status)
+      ) {
+        throw new BadRequestException('Invalid status filter');
+      }
       filter.status = query.status;
     }
 
@@ -109,6 +115,9 @@ export class JobsService {
   }
 
   async findOne(id: string, user: User): Promise<JobPosting> {
+    if (typeof id !== 'string' || !/^[a-zA-Z0-9-]+$/.test(id)) {
+      throw new BadRequestException('Invalid job posting ID');
+    }
     const posting = await this.jobPostingModel.findById(id).exec();
     if (!posting) throw new NotFoundException('Job posting not found');
 

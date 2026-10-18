@@ -89,5 +89,11 @@
     ],
     "coverageDirectory": "../coverage",
     "testEnvironment": "node"
+  },
+  "overrides": {
+    "picomatch": "^4.0.4",
+    "tmp": "^0.2.6",
+    "lodash": "^4.17.24",
+    "qs": "^6.16.0"
   }
 }
