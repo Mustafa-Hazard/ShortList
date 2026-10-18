@@ -8,7 +8,8 @@ import {
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import { readFile, unlink } from 'fs/promises';
-import { basename } from 'path';
+import { basename, resolve } from 'path';
+import { CV_UPLOAD_DIR } from './multer.config';
 import { PDFParse } from 'pdf-parse';
 import { Cv, CvDocument } from './cv.entity';
 import { ApplicationsService } from '../applications/applications.service';
@@ -39,14 +40,12 @@ export class CvService {
       );
     }
 
-    if (
-      typeof file.path !== 'string' ||
-      file.path.includes('\0') ||
-      !/^[a-zA-Z0-9/\\._-]+$/.test(file.path)
-    ) {
+    // Resolve strictly inside CV_UPLOAD_DIR to neutralize path traversal
+    const safeBaseDir = resolve(CV_UPLOAD_DIR);
+    const safeFilePath = resolve(safeBaseDir, basename(file.path));
+    if (!safeFilePath.startsWith(safeBaseDir)) {
       throw new BadRequestException('Invalid file path');
     }
-    const safeFilePath = file.path;
 
     // Validate PDF magic bytes (%PDF-) to prevent malicious non-PDF uploads
     const buffer = await readFile(safeFilePath);

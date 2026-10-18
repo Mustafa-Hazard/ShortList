@@ -11,10 +11,12 @@ export function sanitizeInput(obj: any): any {
   }
 
   if (Array.isArray(obj)) {
-    return obj.map((item) => sanitizeInput(item));
+    for (let i = 0; i < obj.length; i++) {
+      sanitizeInput(obj[i]);
+    }
+    return obj;
   }
 
-  const cleanObj: Record<string, any> = {};
   for (const key of Object.keys(obj)) {
     if (
       key === '__proto__' ||
@@ -27,27 +29,22 @@ export function sanitizeInput(obj: any): any {
         `Invalid request input: key "${key}" contains prohibited NoSQL operator characters ($ or .) or prototype keys`,
       );
     }
-    Object.defineProperty(cleanObj, key, {
-      value: sanitizeInput(obj[key]),
-      writable: true,
-      enumerable: true,
-      configurable: true,
-    });
+    sanitizeInput(obj[key]);
   }
-  return cleanObj;
+  return obj;
 }
 
 @Injectable()
 export class NoSqlSanitizeMiddleware implements NestMiddleware {
   use(req: Request, _res: Response, next: NextFunction) {
     if (req.body) {
-      req.body = sanitizeInput(req.body);
+      sanitizeInput(req.body);
     }
     if (req.query) {
-      req.query = sanitizeInput(req.query);
+      sanitizeInput(req.query);
     }
     if (req.params) {
-      req.params = sanitizeInput(req.params);
+      sanitizeInput(req.params);
     }
     next();
   }

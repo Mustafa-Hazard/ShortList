@@ -125,7 +125,9 @@ describe('CvService', () => {
       ).rejects.toThrow(
         /Uploaded file is not a valid PDF document \(invalid magic bytes\)/,
       );
-      expect(fsPromises.unlink).toHaveBeenCalledWith(mockFile.path);
+      expect(fsPromises.unlink).toHaveBeenCalledWith(
+        expect.stringContaining('app-1-resume.pdf'),
+      );
     });
 
     it('forbids candidate from uploading CV to someone else application', async () => {
