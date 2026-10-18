@@ -8,6 +8,7 @@ import {
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import { readFile, unlink } from 'fs/promises';
+import { basename } from 'path';
 import { PDFParse } from 'pdf-parse';
 import { Cv, CvDocument } from './cv.entity';
 import { ApplicationsService } from '../applications/applications.service';
@@ -38,9 +39,25 @@ export class CvService {
       );
     }
 
+    // Validate PDF magic bytes (%PDF-) to prevent malicious non-PDF uploads
+    const buffer = await readFile(file.path);
+    if (
+      !buffer ||
+      buffer.length < 5 ||
+      buffer.subarray(0, 5).toString('ascii') !== '%PDF-'
+    ) {
+      await unlink(file.path).catch(() => undefined);
+      throw new BadRequestException(
+        'Uploaded file is not a valid PDF document (invalid magic bytes)',
+      );
+    }
+
+    // Sanitize filename to prevent path traversal or control character injection
+    const sanitizedFilename = basename(file.originalname).replace(/[\r\n\0]/g, '');
+
     let extractedText: string | null = null;
     try {
-      extractedText = await this.extractText(file.path);
+      extractedText = await this.extractTextFromBuffer(buffer);
     } catch (err) {
       this.logger.warn(
         `PDF text extraction failed for application ${applicationId}: ${
@@ -52,7 +69,7 @@ export class CvService {
     try {
       const cv = await this.cvModel.create({
         applicationId,
-        originalFilename: file.originalname,
+        originalFilename: sanitizedFilename,
         storagePath: file.path,
         fileSizeBytes: file.size,
         extractedText,
@@ -86,8 +103,7 @@ export class CvService {
     return { path: cv.storagePath, filename: cv.originalFilename };
   }
 
-  private async extractText(filePath: string): Promise<string | null> {
-    const buffer = await readFile(filePath);
+  private async extractTextFromBuffer(buffer: Buffer): Promise<string | null> {
     const parser = new PDFParse({ data: buffer });
     try {
       const result = await parser.getText({ pageJoiner: '' });

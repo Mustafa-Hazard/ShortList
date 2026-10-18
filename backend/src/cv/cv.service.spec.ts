@@ -10,9 +10,10 @@ import { Cv } from './cv.entity';
 import { ApplicationsService } from '../applications/applications.service';
 import { User } from '../users/user.entity';
 import { Role } from '../common/enums/role.enum';
+import * as fsPromises from 'fs/promises';
 
 jest.mock('fs/promises', () => ({
-  readFile: jest.fn().mockResolvedValue(Buffer.from('fake pdf data')),
+  readFile: jest.fn().mockResolvedValue(Buffer.from('%PDF-1.7 mock valid pdf stream')),
   unlink: jest.fn().mockResolvedValue(undefined),
 }));
 
@@ -59,6 +60,10 @@ describe('CvService', () => {
   } as Express.Multer.File;
 
   beforeEach(async () => {
+    (fsPromises.readFile as jest.Mock).mockResolvedValue(
+      Buffer.from('%PDF-1.7 mock valid pdf stream'),
+    );
+
     cvModel = {
       create: jest.fn().mockResolvedValue({
         ...baseCv,
@@ -88,7 +93,7 @@ describe('CvService', () => {
   });
 
   describe('upload', () => {
-    it('saves CV metadata and extracts text successfully', async () => {
+    it('saves CV metadata and extracts text successfully for valid PDF', async () => {
       applicationsService.findOne.mockResolvedValue(baseApplication as any);
 
       const result = await service.upload('app-1', mockFile, candidate);
@@ -105,6 +110,20 @@ describe('CvService', () => {
         }),
       );
       expect(result).toBeDefined();
+    });
+
+    it('rejects file and unlinks from disk when magic bytes mismatch (%PDF-)', async () => {
+      applicationsService.findOne.mockResolvedValue(baseApplication as any);
+      (fsPromises.readFile as jest.Mock).mockResolvedValue(
+        Buffer.from('MALICIOUS_EXE_PAYLOAD_WITH_PDF_EXTENSION'),
+      );
+
+      await expect(
+        service.upload('app-1', mockFile, candidate),
+      ).rejects.toThrow(
+        /Uploaded file is not a valid PDF document \(invalid magic bytes\)/,
+      );
+      expect(fsPromises.unlink).toHaveBeenCalledWith(mockFile.path);
     });
 
     it('forbids candidate from uploading CV to someone else application', async () => {
