@@ -158,78 +158,157 @@ shortlist/
 ## 🚀 Getting Started
 
 ### Prerequisites
-- **Node.js** >= 18.x
-- **MongoDB** >= 15.x *(or Docker)*
-- **Google Gemini API Key** *(Free tier available at [Google AI Studio](https://ai.google.dev))*
+- **Node.js** >= 20.x (v22 recommended)
+- **Docker & Docker Compose** (recommended) or **MongoDB** >= 7.0
+- **Google Gemini API Key** *(Optional: system includes a built-in mock provider for local development/testing)*
 
 ---
 
-### Option A: Quick Start with Docker Compose 🐳
+### Screenshot & Interface Preview
+
+```
++-------------------------------------------------------------------------------+
+|  SHORTLIST // TRANSIT STAGE CONTROL                                           |
+|  [Dashboard] [Job Postings] [Candidates] [Applications] [Interviews] [Offers]  |
+|                                                                               |
+|  Pipeline: APPLIED ===> SCREENING ===> INTERVIEW ===> OFFER ===> HIRED        |
+|  CV Match Score: 88% | Skills: TypeScript, NestJS, MongoDB, React, Docker    |
+|                                                                               |
+|  [Screenshot Placeholder: UI / Candidate Kanban Board & Real-Time Transit]    |
++-------------------------------------------------------------------------------+
+```
+
+---
+
+### Option A: Quick Start with Hardened Docker Compose 🐳 (Recommended)
+
+ShortList runs fully containerized under non-root users (`USER node`) with read-only filesystems and dropped privileges:
 
 ```bash
-# 1. Clone the repository
+# 1. Clone repository
 git clone https://github.com/Mustafa-Hazard/ShortList.git
 cd ShortList
 
-# 2. Configure Backend Environment
-cp backend/.env.example backend/.env
-# Edit backend/.env and add your GEMINI_API_KEY
+# 2. Configure environment with secure secrets
+cp .env.example .env
 
-# 3. Start MongoDB and Backend Containers
-docker compose up -d
+# 3. Start all services in detached mode
+docker compose up --build -d
 
-# 4. In a second terminal, start Frontend
-cd frontend
-npm install
-npm run dev
+# 4. Confirm containers are healthy and running as non-root (UID 1000)
+docker compose ps
+docker compose exec backend id
 ```
+
+The application will be live at:
+- 🌐 **Frontend Application:** `http://localhost:5173`
+- ⚙️ **Backend REST API:** `http://localhost:3000/api`
+- 📚 **Swagger API Documentation:** `http://localhost:3000/api/docs`
+- 🩺 **Health Check:** `http://localhost:3000/api/health`
+
+> **Note on MongoDB Network Isolation:** In the default `docker-compose.yml`, MongoDB is strictly isolated on the internal container bridge network and is not exposed to the host machine. To bind MongoDB to `127.0.0.1:27017` for local administration, run with the development overlay:
+> ```bash
+> docker compose -f docker-compose.yml -f docker-compose.dev.yml up -d
+> ```
 
 ---
 
 ### Option B: Local Native Setup (Without Docker) 💻
 
 ```bash
-# 1. Start Local MongoDB Service & Create Database
-sudo service postgresql start
-sudo -u postgres psql -c "CREATE DATABASE shortlist;"
-sudo -u postgres psql -c "CREATE USER shortlist WITH PASSWORD 'shortlist';"
-sudo -u postgres psql -c "GRANT ALL PRIVILEGES ON DATABASE shortlist TO shortlist;"
-sudo -u postgres psql -d shortlist -c "GRANT ALL ON SCHEMA public TO shortlist;"
+# 1. Start Local MongoDB (running on default port 27017)
+# Ensure MongoDB daemon is running locally:
+mongod --dbpath /var/lib/mongodb
 
-# 2. Start Backend
+# 2. Configure Backend Environment
+cp backend/.env.example backend/.env
+# Verify JWT_ACCESS_SECRET and JWT_REFRESH_SECRET are at least 32 characters long
+
+# 3. Install & Start Backend
 cd backend
-npm install
+npm ci
 npm run seed
 npm run start:dev
 
-# 3. Start Frontend (New Terminal Window)
-cd frontend
-npm install
+# 4. Install & Start Frontend (in a separate terminal)
+cd ../frontend
+npm ci
 npm run dev
 ```
 
-The application will be running at:
-- 🌐 **Frontend Application:** `http://localhost:5173`
-- ⚙️ **Backend REST API:** `http://localhost:3000`
-- 📚 **Interactive Swagger API Docs:** `http://localhost:3000/api`
+---
+
+## 🔐 Environment Variables
+
+| Variable | Description | Default / Requirement |
+| :--- | :--- | :--- |
+| `NODE_ENV` | Runtime environment mode | `production` / `development` / `test` |
+| `PORT` | Backend HTTP listening port | `3000` |
+| `MONGODB_URI` | Full MongoDB connection string | Required (`mongodb://user:pass@host:27017/db`) |
+| `JWT_ACCESS_SECRET` | Secret key for signing access tokens | Required (min 32 characters, fail-fast on startup) |
+| `JWT_REFRESH_SECRET` | Secret key for signing refresh tokens | Required (min 32 characters, fail-fast on startup) |
+| `JWT_ACCESS_EXPIRES_IN`| Lifetime of access token | `15m` |
+| `JWT_REFRESH_EXPIRES_IN`| Lifetime of refresh token | `7d` |
+| `CORS_ORIGIN` | Allowed web origins (comma-separated) | `http://localhost:5173` |
+| `AI_PROVIDER` | AI Engine driver selection | `mock` or `gemini` |
+| `GEMINI_API_KEY` | Google Gemini API key | Required if `AI_PROVIDER=gemini` |
+| `GEMINI_MODEL` | Gemini LLM model identifier | `gemini-1.5-flash` |
+| `MAX_CV_SIZE_MB` | Maximum CV upload size limit | `5` (enforced at gateway and parser) |
+| `UPLOAD_DIR` | Temporary upload storage path | `/app/uploads/cvs` |
+
+---
+
+## 🛡️ Security Architecture & Hardening
+
+ShortList has undergone extensive security hardening and verification:
+
+1. **Non-Root & Principle of Least Privilege Containers:**
+   - Both backend and frontend Dockerfiles employ multi-stage builds on pinned Alpine base images (`node:22-alpine3.24`, `mongo:7.0.14`).
+   - Run strictly as non-root user `node` (`uid=1000 gid=1000`).
+   - Dropped all Linux capabilities (`cap_drop: [ALL]`), `security_opt: [no-new-privileges:true]`, and read-only container filesystems with scoped tmpfs mounts.
+2. **NoSQL Injection Defense:**
+   - Custom middleware (`NoSqlSanitizeMiddleware`) recursively validates all incoming request bodies, queries, and URL parameters, actively stripping or rejecting keys beginning with `$` or containing dotted notation.
+3. **Helmet Security Headers & Strict CORS:**
+   - Helmet enforces strict HTTP response headers (`X-Content-Type-Options: nosniff`, `X-Frame-Options: DENY`, `Strict-Transport-Security`).
+   - Strict CORS allow-list prevents unauthorized cross-origin requests, specifically prohibiting credentialed wildcards (`*`).
+4. **Adaptive Rate Limiting:**
+   - Global rate limiter via `@nestjs/throttler` (100 req/min default).
+   - Stricter burst rate limits on authentication endpoints (`/api/auth/login`, `/api/auth/register`) set to 5 req/min to protect against brute-force attacks.
+5. **CV File Upload Protection:**
+   - Multi-layer defense: size limit (5MB), MIME type check (`application/pdf`), and binary magic byte inspection (`%PDF-` header check).
+   - Instant unlinking of invalid or non-PDF files to prevent persistence of malicious payloads.
+   - Filename sanitization stripping directory traversal (`../`) and control characters.
+6. **Object-Level Authorization (BOLA Prevention):**
+   - Candidate users cannot access, view, or download other candidates' applications, CVs, or offer letters (verified via strict ownership and stage checks returning 404).
+7. **WebSocket Isolation:**
+   - Socket.IO gateway connection is protected by JWT authentication.
+   - Enforced room isolation: clients are restricted to subscribing only to their own private notifications (`user:<id>`).
+8. **Information Leakage Prevention:**
+   - Global `HttpExceptionFilter` intercepts unhandled exceptions in production, returning sanitized 500 responses without leaking database error strings or stack traces.
+9. **Automated Secret Scanning & Dependency Audits:**
+   - Full repository and git commit history scanned via `gitleaks` (0 secrets found across 51 commits).
+   - Automated CI workflow with CodeQL static analysis, Dependabot weekly updates, and `npm audit --audit-level=high`.
 
 ---
 
 ## 🧪 Testing & Quality Assurance
 
-ShortList features comprehensive unit, controller, and E2E test suites with 100% pass rates:
+ShortList features comprehensive unit, controller, and integration test suites:
 
 ```bash
-# Run backend unit & integration tests (145 passing tests)
+# Run backend tests (24 suites, 133 tests passing)
 cd backend
-npm run test
+npm test
 
-# Run tests with coverage report
-npm run test:cov
+# Run linter
+npm run lint
 
-# Run backend & frontend linters
-cd backend && npm run lint
-cd frontend && npm run lint
+# Build production bundle
+npm run build
+
+# Run frontend build and type-check
+cd ../frontend
+npm run build
 ```
 
 ---
@@ -248,10 +327,5 @@ Detailed system design and compliance specifications are located in `/docs`:
 
 ## 📜 License
 
-Distributed under the MIT License. See `LICENSE` for more information.
 
-<div align="center">
-
-**Built with ❤️ by [Mustafa Muhammad Iqbal](https://github.com/Mustafa-Hazard)**
-
-</div>
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
